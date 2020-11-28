@@ -1,50 +1,70 @@
 import pygame
 import math
 import time
-from simulateur import *
-from Fenetre import *
+import threading
+
+from Simulators import Simulator
+from Fenetres import Fenetre, EventFenetre
+from Drones import Drone
+from Objects import Object
+from Vectors import Vector
+from Environements import Environment
 
 if __name__ == '__main__':
     #creation des drones coordonnée, vitesse, rayon
     #at t=0
     #now, speed=cst
-    drone1=Drone(Point(0,0),Point(0.5,0.5),0.1)
-    drone2=Drone(Point(1,0),Point(-0.5,0),0.1)
-    drone3=Drone(Point(0,1),Point(0.1,-0.5),0.1)
+    
+    if(False):
+        drone1=Drone(Vector(0,0),Vector(0.5,0.5),0.1)
+        drone2=Drone(Vector(1,0),Vector(-0.5,0),0.1)
+        drone3=Drone(Vector(0,1),Vector(0.1,-0.5),0.1)
 
-    #creation des obstacles, liste des coins
-    obj=Object([Point(5,5), Point(3,5), Point(3,3), Point(5,3), Point(7,5)])
-    obj1=Object([Point(-10,5), Point(-13,5), Point(-5,3)])
+        #creation des obstacles, liste des coins
+        obj=Object([Vector(5,5), Vector(3,5), Vector(3,3), Vector(5,3), Vector(7,5)])
+        obj1=Object([Vector(-10,5), Vector(-13,5), Vector(-5,3)])
 
-    #creation du simu
-    simu=Simulator([drone1, drone2, drone3], [obj, obj1])
+        #creation du simu
+        env=Environment([drone1, drone2, drone3], [obj, obj1])
+        env.save("env_1")
+    else:
+        env=Environment()
+        env.load("env_1")
+
+    eventFenetre=EventFenetre()
+    eventFenetre.coefTime=1/1000
+
+    simu=Simulator(env, eventFenetre)
 
     #affichage : ecran
     pygame.init()
-    size=(1080,720)
-    ecran=pygame.display.set_mode(size, pygame.RESIZABLE)
-    continuer = True
-    
+    size=(1080,720) #taille par défaut
+    ecran=pygame.display.set_mode(size, pygame.RESIZABLE) #taille modifiable
+
     #creation de la fenetre active
-    fenetre = Fenetre(ecran, simu)
-
-    
-
+    fenetre = Fenetre(ecran, env, eventFenetre)
+    continuer = True
     while continuer:
         size=ecran.get_size()
-        ecran.fill((25,25,250))
+        ecran.fill((25,25,250)) #fond d'écran bleu
         police = pygame.font.Font(None,50)
-        texte = police.render("Press key",True,pygame.Color("#FFFF00"))
-        ecran.blit(texte, (size[0]/2, size[1]/3))
+        texte = police.render("Press Enter",True,pygame.Color("#FFFF00")) #message texte
+        a,b=texte.get_size()
+        ecran.blit(texte, (size[0]/2-a/2, (size[1]-b)/3))
+
         for event in pygame.event.get(): #ecoute les events de touche
             #arrete si on appuie sur la croix ou sur echap
-            if event.type == const.QUIT or (event.type == const.KEYDOWN and event.key == const.K_ESCAPE):
-                continuer = 0
-            if event.type == const.KEYDOWN: #appuyer sur une touche pour commencer
-                fenetre.run()
-                continuer=0
-
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                continuer = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN: #appuyer sur une touche pour commencer
+                eventFenetre.stop=False
+                continuer=False
         pygame.display.flip()
+        
+    if not eventFenetre.stop:
+        simu.start()
+        fenetre.run()
 
-    pygame.quit()
+        pygame.quit()
+        simu.join()
 
