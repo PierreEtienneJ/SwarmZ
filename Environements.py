@@ -16,7 +16,26 @@ class Environment():
 
         self.nb_drones=len(list_Drones)
         self.nb_objects=len(list_Objects) 
+
+    def addObject(self, listPoint):
+        self.objects.append(Object(listPoint))
+        self.nb_objects+=1
+
+    def nearEnv(self, position, rayon)->tuple:
+        drones=[]
+        objs=[]
+        for drone in self.drones:
+            if(0<position.distance(drone.position)<rayon):
+                drones.append(drone)
         
+        for obj in self.objects:
+            P=[]
+            for point in obj.listPoint:
+                if(position.distance(point)<rayon):
+                    P.append(point)
+            objs.append(Object(P))
+        return (drones, objs)
+
     def save(self, nom="environement"):
         drones=[]
 
@@ -80,5 +99,4 @@ class Environment():
         except:
             print("type de fichier non valide !")
             return None
-
 

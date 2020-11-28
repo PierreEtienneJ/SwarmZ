@@ -3,7 +3,7 @@ from pygame import locals as const
 
 import time
 import threading
-
+import statistics
 from Environements import Environment
 from Vectors import Vector
 
@@ -37,6 +37,8 @@ class Fenetre():
         self.maintien_clique_droit=False
         self.new_clique_Object=[]
         
+        self.pos_souris=[]
+    
     def zoom_auto(self):
         #recherche du barycentre des objets et des drones
         centre=Vector(0,0)
@@ -77,11 +79,11 @@ class Fenetre():
                 x, y = event.pos #position de la souris
                 self.position_souris_avant=Vector(x,y) #sauvegarde
 
-            if(event.button==1): #clique droit
+            if(event.button==3): #clique droit
                 self.maintien_clique_droit=True
                 x, y = event.pos #position de la souris
                 #p_y=
-                #self.new_clique_Object.append()
+                self.new_clique_Object.append(self.inv_decalagePoint((x,y)).x_scalaire(1/self.zoom))
 
             if(event.button==4): #Molette souris haut
                 self.zoom+=5   #on zoom
@@ -94,8 +96,12 @@ class Fenetre():
         if(event.type == pygame.MOUSEBUTTONUP): # si on declique
             if(event.button==1): #clique gauche
                 self.maintien_clique_gauche=False
+            
+            if(event.button==3): #clique droit
+                self.maintien_clique_droit=False
 
         if(event.type==pygame.MOUSEMOTION): #si la souris bouge
+            self.pos_souris=event.pos
             if(self.maintien_clique_gauche): #si le clique gauche est tjrs enfoncé
                 x, y = event.pos #position souris
                 delta=self.position_souris_avant.add(Vector(x,y).x_scalaire(-1)) #delta=avant-après
@@ -118,7 +124,14 @@ class Fenetre():
 
             if(event.key==const.K_MINUS or event.key==const.K_KP_MINUS):
                 self.eventFenetre.coefTime*=1/2
-                
+            
+            if(event.key == const.K_ESCAPE): #on appuye sur echap => annule le polygone
+                self.new_clique_Object=[]
+            if(event.key == const.K_RETURN): #sur enter on confirme le polygone
+                if(len(self.new_clique_Object)>1):
+                    self.environement.addObject(self.new_clique_Object)
+                self.new_clique_Object=[]
+
         if(event.type == pygame.QUIT):
             self.stop()
             
@@ -127,6 +140,16 @@ class Fenetre():
         x=x+self.centre.x+self.size[0]/2
         y=-y+self.centre.y+self.size[1]/2
         return (x,y)
+    
+    def inv_decalage(self, a): #inversion du décalage par rapport au centre de la fenetre
+        x,y=a
+        x=x-(self.centre.x+self.size[0]/2)
+        y=-y+self.centre.y+self.size[1]/2
+        return (x,y)
+    
+    def inv_decalagePoint(self,a):
+        (x,y)=self.inv_decalage(a)
+        return Vector(x,y)
 
     def decalage_Point(self, p): #espèce de sur-définition
         return self.decalage((p.x, p.y))
@@ -140,7 +163,7 @@ class Fenetre():
         
         #dessine les obstacles
         for obj in self.environement.objects:
-            pygame.draw.circle(self.ecran, (40,40,200), self.decalage_Point(obj.center.x_scalaire(self.zoom)), obj.rayon*self.zoom)
+          #  pygame.draw.circle(self.ecran, (40,40,200,50), self.decalage_Point(obj.center.x_scalaire(self.zoom)), obj.rayon*self.zoom)
             
             points=obj.list_Points
             P=[]
@@ -161,9 +184,17 @@ class Fenetre():
             a,b=texte.get_size()
             self.ecran.blit(texte, (self.size[0]/2-a/2, (self.size[1]-b)/3))
 
+        #on dessine le polygone en cours
+        if(len(self.new_clique_Object)>0):
+            P=[]
+            for point in self.new_clique_Object:
+                P.append(self.decalage_Point(point.x_scalaire(self.zoom)))
+            P.append(self.pos_souris)
+            pygame.draw.lines(self.ecran, (255,255,255), False, P,2)
+
     def run(self):
         t1=t0=time.time() #save time
-        
+        T=[]
         while(not self.eventFenetre.stop): 
             for event in pygame.event.get(): #pécho les events
                 self.process_event(event) #travail event
@@ -177,6 +208,11 @@ class Fenetre():
             self.eventFenetre.dt=time.time()-t0
             
             t0=time.time()
+
+            if(len(T)==100):
+                print('mean fps',1/statistics.mean(T))
+                T=[]
+            T.append(self.eventFenetre.dt)
     
     def stop(self):
         self.eventFenetre.stop=True

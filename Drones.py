@@ -1,7 +1,7 @@
 from Vectors import Vector
 
 import random
-
+import math
 class Drone:
     """this class corespond to a drone, can simulate there deplacement not there AI"""
     def __init__(self, position:Vector, vitesse:Vector, rayon:float, name="", color=(-1,-1,-1)):
@@ -31,6 +31,7 @@ class Drone:
         """calcul the next position with they speed and time"""
         self.next_position.x=self.position.x+self.vitesse.x_scalaire(dt).x
         self.next_position.y=self.position.y+self.vitesse.x_scalaire(dt).y
+        self.next_vitesse=self.vitesse.x_scalaire(1+dt*0.01)
 
     def set_vitesse(self, new_vitesse:Vector)->None:
         """Can change speed"""
@@ -46,4 +47,11 @@ class Drone:
 
     def collision(self)->None:
         """Le drone s'occupe de sa collision"""
-        self.vitesse=Vector(0,0)
+        prev_cap=self.vitesse.cap()
+        delta=(2*random.random()-1)*math.pi/12
+        
+
+        self.next_vitesse=self.vitesse.setCap(self.vitesse.cap()+delta-math.pi)
+        self.next_position=self.position
+
+       # print("ancien cap : ",prev_cap*180/math.pi, "new cap: ",self.vitesse.cap()*180/math.pi)

@@ -15,17 +15,21 @@ if __name__ == '__main__':
     #at t=0
     #now, speed=cst
     
-    if(False):
-        drone1=Drone(Vector(0,0),Vector(0.5,0.5),0.1)
-        drone2=Drone(Vector(1,0),Vector(-0.5,0),0.1)
+    if(True):
+        drone1=Drone(Vector(0,0),Vector(0.1,0),0.1)
+        drone2=Drone(Vector(1,0),Vector(0.2,0),0.1)
         drone3=Drone(Vector(0,1),Vector(0.1,-0.5),0.1)
+        drone4=Drone(Vector(2,0),Vector(0.5,0.5),0.1)
+        drone5=Drone(Vector(1.5,0),Vector(-0.5,0),0.1)
+        drone6=Drone(Vector(0.5,1),Vector(0.1,-0.5),0.1)
 
         #creation des obstacles, liste des coins
         obj=Object([Vector(5,5), Vector(3,5), Vector(3,3), Vector(5,3), Vector(7,5)])
         obj1=Object([Vector(-10,5), Vector(-13,5), Vector(-5,3)])
+        obj2=Object([Vector(-5,-5), Vector(-3,-5), Vector(-3,-3), Vector(-5,-3), Vector(-7,-5)])
 
-        #creation du simu
-        env=Environment([drone1, drone2, drone3], [obj, obj1])
+        #creation du sim
+        env=Environment([drone1, drone2, drone3,drone4, drone5, drone6], [obj, obj1, obj2])
         env.save("env_1")
     else:
         env=Environment()
