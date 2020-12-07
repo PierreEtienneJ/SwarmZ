@@ -1,7 +1,7 @@
 {
     "drones": [
         {
-            "name": "drone_7",
+            "name": "drone_5",
             "position": {
                 "x": 0,
                 "y": 0
@@ -13,12 +13,12 @@
             "radius": 0.2,
             "color": [
                 255,
-                58,
-                1
+                79,
+                24
             ]
         },
         {
-            "name": "drone_4",
+            "name": "drone_6",
             "position": {
                 "x": 1,
                 "y": 1
@@ -30,12 +30,12 @@
             "radius": 0.2,
             "color": [
                 255,
-                30,
-                34
+                42,
+                0
             ]
         },
         {
-            "name": "drone_4",
+            "name": "drone_6",
             "position": {
                 "x": 0,
                 "y": 1
@@ -47,12 +47,12 @@
             "radius": 0.2,
             "color": [
                 255,
-                29,
-                17
+                39,
+                47
             ]
         },
         {
-            "name": "drone_3",
+            "name": "drone_5",
             "position": {
                 "x": 1,
                 "y": 1
@@ -64,8 +64,8 @@
             "radius": 0.2,
             "color": [
                 255,
-                35,
-                12
+                48,
+                37
             ]
         },
         {
@@ -81,12 +81,12 @@
             "radius": 0.2,
             "color": [
                 255,
-                70,
-                39
+                76,
+                1
             ]
         },
         {
-            "name": "drone_1",
+            "name": "drone_9",
             "position": {
                 "x": 2,
                 "y": 1
@@ -98,8 +98,8 @@
             "radius": 0.2,
             "color": [
                 255,
-                20,
-                47
+                54,
+                27
             ]
         }
     ],
