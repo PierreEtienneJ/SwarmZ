@@ -1,3 +1,4 @@
+![alt text](https://github.com/SwarmZ/__img/logo_swarmZ_large.jpg "SwarmZ")
 SwarmZ
 =======
 
