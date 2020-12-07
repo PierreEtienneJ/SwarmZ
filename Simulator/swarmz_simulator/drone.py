@@ -1,7 +1,8 @@
-from vector import Vector
-from object import Object
-from radar import Radar
-from collision import *
+from swarmz_simulator.collision import *
+from swarmz_simulator.vector import Vector
+from swarmz_simulator.object import Object
+from swarmz_simulator.radar import Radar
+
 import numpy as np
 import math
 import random

@@ -1,77 +1,76 @@
-Simulator SwarmZ
-=================
-**/!\ This project is in progress, there are a lot of problems.  We advise you not to use it for the moment if you are looking for a complete solution.**
+SwarmZ
+=======
 
 # [EN]
-This simulator is part of the SwarmZ project powered by Naval Innovation Hub, which aims to create a cheap swarm of marine drones.
-This code allows to simulate a swarm in order to test programs or a _game area_ for reinforcement learning. 
+This repository is part of the SwarmZ project powered by Naval Innovation Hub, which aims to create a cheap swarm of marine drones.
 
-## Prerequisite :
-You need python 3.8 and [pygame 2.0](https://www.pygame.org/)
+## Presentation :
+The objective of this project is to create a robust marine drone swarm at less than 200€ each.   
+The challenge is therefore to look for alternatives to the expensive sensors usually used. 
 
-## Start :
-To start the display and the simulation, just start the file ``main.py``. You will also need all of the other files in the same folder.
+The working team is composed of Khemaies Benazzouz, Adrien Lefort, Axel Melilo and Sébastien Rolle supported by many volunteers.
 
-## Display :
-Here are the keys you need :
+## Git : 
+Divided into different subparts, this git allows to follow the different evolutions of the project. 
 
-* **Enter** to start the simulation
-* **Space** to set pause
-* **+** or **-** to speed up or slow down the simulation
-* **Roller** for zoom in/out
-* **Left click** _maintained_ to move on the map
-* **Right click** to place the top of an obstacle, **Enter** to confirm the obstacle, **Escap** to cancel
-* **q** to stop display an the simulator
-* **a** to draw or not ray's radar
+## Mechanical Design :
+This file gathers all the studies on the mechanics of the drones, such as: hull, propulsion... 
 
-## Version :
-* alpha 0.2
-	* remains to be done:
-		* fix some bugs including the first radar beam that crosses obstacles
-		* explain some parts of simulator.py and display.py
-		* facilitate the implementation of the first algorithms 
+### Hardware : 
+Gathers all the studies on sensors and other electronic components.
+
+### Software :
+Contains all the work on drone programming
+
+### Simulator : 
+Apart from the software, contains the work on a simulator of the swarm.
+
+
 ## Authors :
+* Khemaies Benazzouz 
+* Mickael Farina
 * Pierre-Etienne Josse
+* Adrien Lefort
+* Axel Melilo
+* Sébastien Rolle
 
 ## Contributors :
-* Ronan Dupont 
+
 
 # [FR]
-Ce simulateur entre dans le projet SwarmZ propulsé par Naval Innovation Hub qui a pour but de créer un essaim de drones marins peu chère. 
-Ce code permet de simuler un essaim afin de tester des programmes ou une zone de _jeu_ pour de l'apprentissage par renforcement. 
+Ce git fait partie du projet SwarmZ propulsé par Naval Innovation Hub qui a pour but de créer un essaim de drones marins peu chère. 
 
-## Pré-requis :
-Ce code a été fait sous python 3.8 et [pygame 2.0](https://www.pygame.org/).
-Vous aurez aussi besoin de :
-	-[numpy](https://numpy.org/)
+## Présentation :
+Le but de ce projet est donc de créer un essaim de drones marins robuste à moins de 200€ l'unité.   
+L'enjeu est donc de chercher des alternatives aux capteurs chers utilisés habituellement. 
 
-## Démarrage :
-Pour lancer l'affichage et la simulation, il suffit de lancer le fichier ``main.py``. Vous aurez besoin de l'ensemble des autres fichiers dans le même dossier. 
+L'équipe de travail est composé de Khemaies Benazzouz, Adrien Lefort, Axel Melilo et Sébastien Rolle soutenu par de nombreux volontaires.
 
-## L'affichage :
-Voici les touches dont vous avez besoin :
+## Git : 
+Répartie en différentes sous-parties, ce git permet de suivre les différentes évolutions du projet. 
 
-* **Entrée** pour commencer la simulation
-* **Espace** pour mettre en pause
-* **+** ou **-** pour accélérer ou ralentir la simulation
-* **Roulette** pour zoomer/dezoomer
-* **Clique gauche** _maintenu_ pour se déplacer sur la carte
-* **Clique droit** pour placer le sommet d'un obstacle, **Entrée** pour confirmer l'obstacle, **Echap** pour annuler
-* **q** pour stoper l'affichage et la simulation 
-* **a** pour afficher ou non les rayons des radars
+### Design mecanique :
+Ce dossier permet de rassembler l'ensemble des études sur la mécanique des drones, comme : la coque, la propulsion... 
 
-## Version :
-* alpha 0.2
-	* reste à faire :
-		* fixer quelques bugs notamment le premier rayon du radar qui traverse les obstacles
-		* expliquer certaines parties de simulator.py et de display.py
-		* faciliter l'implémentation des premiers algorithmes 
+### Hardware : 
+Rassemble l'ensemble des études sur les capteurs et autres composants électronique
+
+### Software :
+Contient l'ensemble du travail sur la programmation des drones
+
+### Simulateur : 
+Mis à part du Software, contient le travail sur un simulateur de l'essaim.
 
 ## Auteurs :
+* Khemaies Benazzouz  
+* Mickael Farina
 * Pierre-Etienne Josse
+* Adrien Lefort
+* Axel Melilo
+* Sébastien Rolle
 
 ## Contributeurs :
-* Ronan Dupont 
+
 
 
 

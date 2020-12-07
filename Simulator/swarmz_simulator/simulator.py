@@ -6,12 +6,12 @@ import time
 import random
 import statistics
 
-from drone import Drone
-from object import Object
-from vector import Vector
-from environment import Environment
-from display import EventDisplay
-from collision import *
+from swarmz_simulator.vector import Vector
+from swarmz_simulator.drone import Drone
+from swarmz_simulator.display import Display, EventDisplay
+from swarmz_simulator.object import Object
+from swarmz_simulator.environment import Environment
+from swarmz_simulator.collision import *
 
 class Simulator(threading.Thread):
     def __init__(self, environment:"Environment", eventDisplay:"display.EventDisplay"):

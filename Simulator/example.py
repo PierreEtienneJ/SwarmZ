@@ -4,12 +4,12 @@ import time
 import threading
 import statistics
 
-from simulator import Simulator
-from display import Display, EventDisplay
-from drone import Drone
-from object import Object
-from vector import Vector
-from environment import Environment
+from swarmz_simulator.vector import Vector
+from swarmz_simulator.drone import Drone
+from swarmz_simulator.simulator import Simulator
+from swarmz_simulator.display import Display, EventDisplay
+from swarmz_simulator.object import Object
+from swarmz_simulator.environment import Environment
 
 if __name__ == '__main__':
     #creation des drones coordonnée, vitesse, rayon

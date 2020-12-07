@@ -1,7 +1,7 @@
-from vector import Vector
 
 #from Objects import Object
-from collision import *
+from swarmz_simulator.collision import *
+from swarmz_simulator.vector import Vector
 
 import numpy as np
 import math

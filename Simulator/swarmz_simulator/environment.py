@@ -3,9 +3,10 @@ L'environement correspond à l'ensemble des drones, des obstacles et des zones d
 qu'utilise le simulateur
 """
 
-from drone import Drone
-from object import Object
-from vector import Vector
+
+from swarmz_simulator.vector import Vector
+from swarmz_simulator.drone import Drone
+from swarmz_simulator.object import Object
 
 import json
 

@@ -1,4 +1,4 @@
-from vector import Vector
+from swarmz_simulator.vector import Vector
 
 class Object:
     """One object was represented by a list of Point : one Object is a polygone"""

@@ -4,9 +4,11 @@ from pygame import locals as const
 import time
 import threading
 import statistics
-from environment import Environment
-from vector import Vector
-from object import Object
+
+from swarmz_simulator.vector import Vector
+from swarmz_simulator.object import Object
+from swarmz_simulator.environment import Environment
+
 
 class Display():
     """this class use pygame to display the simulation"""
