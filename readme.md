@@ -1,6 +1,4 @@
 ![alt text](https://github.com/PierreEtienneJ/SwarmZ/blob/master/__img/logo_swarmZ_large.jpg "SwarmZ")
-SwarmZ
-=======
 
 # [EN]
 This repository is part of the SwarmZ project powered by Naval Innovation Hub, which aims to create a cheap swarm of marine drones.
@@ -37,6 +35,7 @@ Apart from the software, contains the work on a simulator of the swarm.
 
 ## Contributors :
 
+___
 
 # [FR]
 Ce git fait partie du projet SwarmZ propulsé par Naval Innovation Hub qui a pour but de créer un essaim de drones marins peu chère. 
