@@ -1,4 +1,4 @@
-![alt text](https://github.com/SwarmZ/__img/logo_swarmZ_large.jpg "SwarmZ")
+![alt text](https://github.com/PierreEtienneJ/SwarmZ/blob/master/__img/logo_swarmZ_large.jpg "SwarmZ")
 SwarmZ
 =======
 
