@@ -13,7 +13,7 @@ The working team is composed of Khemaies Benazzouz, Adrien Lefort, Axel Melilo a
 ## Git : 
 Divided into different subparts, this git allows to follow the different evolutions of the project. 
 
-## Mechanical Design :
+### Mechanical Design :
 This file gathers all the studies on the mechanics of the drones, such as: hull, propulsion... 
 
 ### Hardware : 
