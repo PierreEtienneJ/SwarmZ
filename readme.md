@@ -30,7 +30,7 @@ Apart from the software, contains the work on a simulator of the swarm.
 * Mickael Farina
 * Pierre-Etienne Josse
 * Adrien Lefort
-* Axel Melilo
+* Axel Melillo
 * Sébastien Rolle
 
 ## Contributors :
@@ -66,7 +66,7 @@ Mis à part du Software, contient le travail sur un simulateur de l'essaim.
 * Mickael Farina
 * Pierre-Etienne Josse
 * Adrien Lefort
-* Axel Melilo
+* Axel Melillo
 * Sébastien Rolle
 
 ## Contributeurs :
