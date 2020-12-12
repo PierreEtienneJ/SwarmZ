@@ -1,7 +1,8 @@
+
 from swarmz_simulator.collision import *
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.object import Object
-from swarmz_simulator.radar import Radar
+from swarmz_simulator.radar import Radar, Lidar
 
 import numpy as np
 import math
@@ -15,7 +16,7 @@ class Drone:
     def __init__(self, position:Vector, speed:Vector, radius:float, name="", color=(-1,-1,-1)):
         self.position=position
         self.speed=speed
-        self.radius=radius
+        self.radius=abs(radius)
         self.next_position=position
         self.next_speed=speed
 
@@ -25,7 +26,7 @@ class Drone:
         self.nearObjects=[]
         self.goal=None
 
-        self.radar=Radar(10,int(360/5))
+        self.radar=Lidar(10,int(360/5))
 
         self.Dt=0
 
@@ -68,22 +69,7 @@ class Drone:
         self.next_position.x=self.position.x+self.speed.x_scal(dt).x
         self.next_position.y=self.position.y+self.speed.x_scal(dt).y
 
-        if(self.arrive):
-            self.next_speed.setCap(self.speed.cap()+math.pi/12*dt)
-            self.color=(255,random.randint(0,255), random.randint(0,255))
-
-        else:
-            if(self.Dt>5):
-                self.Dt=0
-                if(self.goal!=None):
-                    self.next_speed.setCap(Vector(self.goal.x-self.next_position.x, self.goal.y-self.next_position.y).cap()+(2*random.random()-1)*math.pi/6)
-            else:
-                self.next_speed=self.speed
-
-            self.Dt+=dt
-
-        if(not self.arrive):
-            self.T+=dt
+        self.IA(dt=dt)
         
     def setNextSpeed(self, new_speed:Vector)->None:
         """Set new_speed to the Drone
@@ -146,9 +132,6 @@ class Drone:
         
         self.radar.update(list_Objects=list_objects, list_Drones=list_drones)
 
-        
-
-
     def fitness(self):
         """notes the actions of the drone
         Returns:
@@ -177,10 +160,26 @@ class Drone:
 
         return note
 
+    def IA(self,**kwargs):
+        dt=kwargs.get('dt', None)
+        
+        if(self.arrive):
+            self.next_speed.setCap(self.speed.cap()+math.pi/12*dt)
+            self.color=(255,random.randint(0,255), random.randint(0,255))
 
+        else:
+            if(self.Dt>5):
+                self.Dt=0
+                if(self.goal!=None):
+                    self.next_speed.setCap(Vector(self.goal.x-self.next_position.x, self.goal.y-self.next_position.y).cap()+(2*random.random()-1)*math.pi/6)
+            else:
+                self.next_speed=self.speed
 
-if __name__ == '__main__':
-    pass
+            self.Dt+=dt
+
+        if(not self.arrive):
+            self.T+=dt
+
 
 
         

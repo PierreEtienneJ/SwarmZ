@@ -39,6 +39,7 @@ class Environment():
             d=position.distance(drone.position)
             if(0<d+drone.radius<radius):
                 drones.append([d,drone])
+                
         """
         for obj in self.objects:
             P=[]

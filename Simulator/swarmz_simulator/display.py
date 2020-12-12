@@ -12,14 +12,16 @@ from swarmz_simulator.environment import Environment
 
 class Display():
     """this class use pygame to display the simulation"""
-    def __init__(self, screen:pygame.Surface, environment:Environment, eventDisplay):
+    def __init__(self,environment:Environment, eventDisplay):
         threading.Thread.__init__(self)
         """need one Surface and one simulation"""
-        self.screen=screen
+        
+        pygame.init()    
+        self.screen=pygame.display.set_mode((1080,720), pygame.RESIZABLE) #taille modifiable
         self.environment=environment
         self.eventDisplay=eventDisplay
 
-        self.size=screen.get_size()
+        self.size=self.screen.get_size()
 
         self.background=(20,20,150) #never use yet
         self.running = True
@@ -43,7 +45,9 @@ class Display():
         self.pos_souris=[]
 
         self.displayRadar=True
-    
+        
+        
+
     def zoom_auto(self):
         """set new zoom
         """
@@ -93,9 +97,11 @@ class Display():
                 self.new_clique_Object.append(self.inv_offsetPoint((x,y)).x_scal(1/self.zoom))
 
             if(event.button==4): #Molette souris haut
+
                 self.zoom+=5   #on zoom
 
             if(event.button==5): #Molette souris bas
+
                 self.zoom-=5   #on dezoom
                 if(self.zoom<1):
                     self.zoom=1
@@ -147,6 +153,7 @@ class Display():
 
         if(event.type == pygame.QUIT):
             self.stop()
+            
 
     def offset(self, a): #def décalage par rapport au centre de la fenètre
         x,y=a
@@ -168,50 +175,48 @@ class Display():
         return self.offset((p.x, p.y))
 
     def update_screen(self):
-        pygame.draw.rect(self.screen, (20,20,100), (0,0)+self.size) #recrée un fond
-
-        #dessine l'absice et l'ordonnée
+        pygame.draw.rect(self.screen, self.background, (0,0)+self.size) #recrée un fond
+    
+           #dessine l'absice et l'ordonnée
         pygame.draw.line(self.screen, (255,0,0),self.offset((0,-1e4)), self.offset((0, 1e4)))
         pygame.draw.line(self.screen, (255,0,0),self.offset((-1e4,0)), self.offset((1e4, 0)))
-        
+            
         #on dessine le but : 
         if(self.environment.goal_has_def()):
             P=[]
             for p in self.environment.goal.list_Points:
                 P.append(self.offset_Point(p.x_scal(self.zoom)))
             pygame.draw.polygon(self.screen, (255,0,0), P,0)
-            
-        #dessine les obstacles
+                
+            #dessine les obstacles
         for obj in self.environment.objects:
             points=obj.list_Points
             P=[]
             for point in points:
                 P.append(self.offset_Point(point.x_scal(self.zoom)))
             pygame.draw.polygon(self.screen, (255,255,255), P,7)
-        
-        #draw all drones by circle 
-
+            
+            #draw all drones by circle 
+    
         for drone in self.environment.drones:
             pygame.draw.circle(self.screen, drone.color, self.offset_Point(drone.position.x_scal(self.zoom)), drone.radius*self.zoom)
-            
-            #draw radar
+                
+                #draw radar
             if(self.displayRadar):
                 for i in range(drone.radar.nb_rays):
                     ray=Vector(1,0)
-                    ray.setCap(drone.radar.rad_step*i+drone.speed.cap())
+                    ray.setCap(drone.radar.angles_[i]+drone.speed.cap())
                     ray.setNorm(drone.radar.rays[i])
                     pygame.draw.line(self.screen, (0,200,0), self.offset_Point(drone.position.x_scal(self.zoom)), 
                                 self.offset_Point(drone.position.add(ray).x_scal(self.zoom)), 1)
-                
-              
-                
-
-            #drow speed vector
+                    
+                  
+                    
+    
+                #drow speed vector
             pygame.draw.line(self.screen, (143,202,90), self.offset_Point(drone.position.x_scal(self.zoom)), 
-                             self.offset_Point(drone.position.add(drone.speed).x_scal(self.zoom)), 2)
+                                 self.offset_Point(drone.position.add(drone.speed).x_scal(self.zoom)), 2)
 
-
-            
 
         if(self.eventDisplay.pause):
             police = pygame.font.Font(None,60)
@@ -230,7 +235,7 @@ class Display():
     def run(self):
         t1=t0=time.time() #save time
         T=[]
-        while(not self.eventDisplay.stop): 
+        while(not self.eventDisplay.stop):
             for event in pygame.event.get(): #pécho les events
                 self.process_event(event) #travail event
             self.update_screen() #modifie la fenètre
@@ -248,17 +253,17 @@ class Display():
               #  print('mean fps',1/statistics.mean(T))
                 T=[]
             T.append(self.eventDisplay.dt)
-    
+        
     def stop(self):
         self.eventDisplay.stop=True
-        
+        pygame.quit()  
 
 
 class EventDisplay():
     def __init__(self):
         #communication entre la fenetre et la simulation
-        self.pause=False ##sert a mettre en pause la simulation
-        self.stop=True #stop la simulation et la fenètre
+        self.pause=True ##sert a mettre en pause la simulation
+        self.stop=False #stop la simulation et la fenètre
         
         self.dt=0  #temps reel 
         self.coefTime=1/50   #ralentissement de la simulation

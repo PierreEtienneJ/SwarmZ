@@ -89,6 +89,25 @@ def Point_Intersection_DD(D1,D2):
 
     return Vector(x,y)
 
+
+def Points_Intersection_CC(C1,C2):
+    """Return all of 2 intersections point if the circle C1 collied with the circle C2
+
+    Args:
+        C1 (tuple): C1=(xc1,yc1,r1) : the circle whith center (xc1,yc1) and radius r1
+        C2 (tuple): C2=(xc2,yc2,r2) : the circle whith center (xc2,yc2) and radius r2
+    
+    Returns:
+        Vector: P1,P2 all of solution 
+
+    Explanation : 
+        We know the equation of C : ((xc-x)²+(yc-y)²=r²) 
+    """
+    (xc1,yc1,r1)=C1
+    (xc2,yc2,r2)=C2
+    pass
+    
+    
 def droite(V,P):
     """return a,b ax+b=y la droite de vecteur directeur V passant par P"""
     #droite ax+by+c=0

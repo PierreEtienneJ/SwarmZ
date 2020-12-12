@@ -47,6 +47,9 @@ class Simulator(threading.Thread):
                 if self.droneGoal(i):
                     self.environment.drones[i].setGoal()
 
+            ##on fixe l'environement autour du drone        
+            self.environment.drones[i].setEnvironment(self.environment.nearEnv(self.environment.drones[i].position, max(self.environment.drones[i].radar.ranges_)))
+            
       #  lead=random.randint(0,self.environment.nb_drones-1)
         for i in range(self.environment.nb_drones):
             if(i in collision_D_D or i in collision_D_Obj):
@@ -56,7 +59,6 @@ class Simulator(threading.Thread):
              #       self.environment.drones[i].next_vitesse.setCap(self.environment.drones[lead].vitesse.cap())
                 self.environment.drones[i].set_next()
                 
-            self.environment.drones[i].setEnvironment(self.environment.nearEnv(self.environment.drones[i].position, self.environment.drones[i].radar.range_))
                 
 
         

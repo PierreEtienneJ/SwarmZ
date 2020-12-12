@@ -3,6 +3,7 @@ import math
 import time
 import threading
 import statistics
+import random
 
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.drone import Drone
@@ -10,20 +11,60 @@ from swarmz_simulator.simulator import Simulator
 from swarmz_simulator.display import Display, EventDisplay
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
+from swarmz_simulator.radar import Radar 
+
+class MyDrone(Drone):
+    """How create a specific drone
+    """
+    def __init__(self,position:Vector):
+        super().__init__(position, Vector(0.5,0), 0.2,name="R2D2",color=(50,50,100))
+        self.radar=Radar(10,[0,math.pi/2,math.pi, -math.pi/2, math.pi/6, -math.pi/6])
+    
+    def IA(self,**kwargs):
+        """create one specific IA
+        """
+        dt=kwargs.get('dt', None)
+        
+        if(self.arrive):
+            self.next_speed.setNorm(0)
+            self.color=(0,0,0)
+        else:
+            if(self.Dt>5):
+                self.Dt=0
+                if(self.goal!=None):
+                    self.next_speed.setCap(Vector(self.goal.x-self.next_position.x, self.goal.y-self.next_position.y).cap()+(2*random.random()-1)*math.pi/4)
+            else:
+                self.next_speed=self.speed
+                if(min(self.radar.rays)<2):
+                    if(self.speed.norm_2()<0.1):
+                        self.next_speed.setNorm(0.1)
+                    else:
+                        self.next_speed.setNorm(self.speed.norm_2()*0.9)
+
+                else:
+                    if(self.speed.norm_2()<1):
+                        self.next_speed.setNorm(self.speed.norm_2()*1.1)
+                    else:
+                        self.next_speed.setNorm(1)
+
+            self.Dt+=dt
+
+        if(not self.arrive):
+            self.T+=dt
+
+
+
 
 if __name__ == '__main__':
-    #creation des drones coordonnée, vitesse, rayon
-    #at t=0
-    #now, speed=cst
-    
+   
     if(True):
-        drone1=Drone(Vector(0,0),Vector(0.2,0),0.2)
+        drone1=MyDrone(Vector(0,0))
         drone2=Drone(Vector(1,1),Vector(0.5,0.5),0.2)
         drone3=Drone(Vector(0,1),Vector(0,-0.5),0.2)
-        drone4=Drone(Vector(1,1),Vector(0,0.5),0.2)
-        drone5=Drone(Vector(0,0),Vector(0.5,0),0.2)
+        drone4=Drone(Vector(4,1),Vector(0,0.5),0.2)
+        drone5=Drone(Vector(4,0),Vector(0.5,0),0.2)
         drone6=Drone(Vector(2,1),Vector(0.5,0),0.2)
-        
+
 
         #creation des obstacles, liste des coins
         obj=Object([Vector(5,5), Vector(3,5), Vector(3,3), Vector(5,3), Vector(7,5)])
@@ -38,41 +79,17 @@ if __name__ == '__main__':
     else:
         env=Environment()
         env.load("env_1")
-
+        
     eventFenetre=EventDisplay()
-    eventFenetre.coefTime=1/1000
+    eventFenetre.coefTime=1/10
 
     simu=Simulator(env, eventFenetre)
 
-    #affichage : ecran
-    pygame.init()
-    size=(1080,720) #taille par défaut
-    ecran=pygame.display.set_mode(size, pygame.RESIZABLE) #taille modifiable
-
-    #creation de la fenetre active
-    fenetre = Display(ecran, env, eventFenetre)
-    continuer = True
-    while continuer:
-        size=ecran.get_size()
-        ecran.fill((25,25,250)) #fond d'écran bleu
-        police = pygame.font.Font(None,50)
-        texte = police.render("Press Enter",True,pygame.Color("#FFFF00")) #message texte
-        a,b=texte.get_size()
-        ecran.blit(texte, (size[0]/2-a/2, (size[1]-b)/3))
-
-        for event in pygame.event.get(): #ecoute les events de touche
-            #arrete si on appuie sur la croix ou sur echap
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                continuer = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN: #appuyer sur une touche pour commencer
-                eventFenetre.stop=False
-                continuer=False
-        pygame.display.flip()
-        
-    if not eventFenetre.stop:
-        simu.start()
-        fenetre.run()
-
-        pygame.quit()
-        simu.join()
+    fenetre = Display(env, eventFenetre)
+    
+    simu.start()
+    fenetre.run()
+    simu.join()
+    pygame.quit()
+    
 
