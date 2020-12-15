@@ -11,10 +11,10 @@ from swarmz_simulator.drone import Drone
 from swarmz_simulator.display import Display, EventDisplay
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
-from swarmz_simulator.collision import *
+import swarmz_simulator.collision as collision
 
 class Simulator(threading.Thread):
-    def __init__(self, environment:"Environment", eventDisplay:"display.EventDisplay"):
+    def __init__(self, environment:"Environment", eventDisplay:"display.EventDisplay", **kwargs):
         """Simulator need one environment, he check colision between drone and drone and drones
         between drone and object"""
         threading.Thread.__init__(self)
@@ -55,13 +55,8 @@ class Simulator(threading.Thread):
             if(i in collision_D_D or i in collision_D_Obj):
                 self.environment.drones[i].collision()
             else:
-             #   if(i!=lead):
-             #       self.environment.drones[i].next_vitesse.setCap(self.environment.drones[lead].vitesse.cap())
                 self.environment.drones[i].set_next()
                 
-                
-
-        
 
         return (collision_D_D, collision_D_Obj)
 
@@ -115,10 +110,11 @@ class Simulator(threading.Thread):
             for l in range(1,len(self.environment.objects[j].list_Points)):
                 B=self.environment.objects[j].list_Points[l]
                 if(self.__collisionDroiteCercle(A,B,self.environment.drones[i].next_position, self.environment.drones[i].radius)): #si le robot colisionne avec la ligne
-                    ##on verifie si le drone ne s'éloigne pas de la ligne
+                    
                     return True
+                    ##on verifie si le drone ne s'éloigne pas de la ligne
                     #on calcul le point d'intersection entre V et (AB)
-                    P=intersection(A,Vector(A.x-B.x, A.y-B.y), self.environment.drones[i].next_position, self.environment.drones[i].next_speed)
+                    P=collision.intersection(A,Vector(A.x-B.x, A.y-B.y), self.environment.drones[i].next_position, self.environment.drones[i].next_speed)
                     if(P==None):
                         return False
                     else:
@@ -126,7 +122,7 @@ class Simulator(threading.Thread):
                         y=self.environment.drones[i].next_position.y
                         vx=self.environment.drones[i].next_speed.x
                         vy=self.environment.drones[i].next_speed.y
-                        (a,b,c)=droite(A,Vector(A.x-B.x, A.y-B.y))
+                        (a,b,c)=collision.droite(A,Vector(A.x-B.x, A.y-B.y))
                         
 
                         if(x<P.x):
@@ -178,7 +174,6 @@ class Simulator(threading.Thread):
                         vx=self.environment.drones[i].next_speed.x
                         vy=self.environment.drones[i].next_speed.y
                         (a,b,c)=droite(A,Vector(A.x-B.x, A.y-B.y))
-                        
 
                         if(x<P.x):
                             if(b==0):
@@ -205,13 +200,14 @@ class Simulator(threading.Thread):
 
             return False
 
-
     def run(self):
         t1=t0=time.time() #save time
 
         while(not self.eventDisplay.stop):
             if(not self.eventDisplay.pause):
-                self.update(self.eventDisplay.dt*self.eventDisplay.coefTime)
+                if(self.eventDisplay.simulation):
+                    self.eventDisplay.simulation=False
+                    self.update(self.eventDisplay.dt*self.eventDisplay.coefTime)
 
                 self.T.append(time.time()-t1)
             t1=time.time()

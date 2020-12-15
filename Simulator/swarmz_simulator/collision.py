@@ -34,12 +34,13 @@ def solv_polynome(a,b,c, complexe=True):
     else:
         return ((-b+math.sqrt(D))/(2*a), (-b-math.sqrt(D))/(2*a))
     
-def Points_Intersection_DC(D, C):
+def Points_Intersection_DC(D, C, point=True):
     """Return all of 2 intersections point if the right D collied the circle C
 
     Args:
         D (tuple): D=(a,b) with y=ax+c
         C (tuple): C=(xc,yc,r) : the circle whith center (xc,yc) and radius r
+        point (bool): if return type equal Vector
     
     Returns:
         Vector: P1,P2 all of solution 
@@ -63,7 +64,11 @@ def Points_Intersection_DC(D, C):
         y2=a*x2+b
         #y1=math.sqrt(r**2-(x1-xc)**2)+yc
         #y2=math.sqrt(r**2-(x2-xc)**2)+yc
-        return (Vector(x1,y1), Vector(x2,y2))
+        if(point):
+            return (Vector(x1,y1), Vector(x2,y2))
+        else:
+            return (x1,y1,x2,y2)
+
 
     else:
         return None
@@ -90,7 +95,8 @@ def Point_Intersection_DD(D1,D2):
     return Vector(x,y)
 
 
-def Points_Intersection_CC(C1,C2):
+#/!\ without verification
+def Points_Intersection_CC(C1,C2, point=True):
     """Return all of 2 intersections point if the circle C1 collied with the circle C2
 
     Args:
@@ -98,14 +104,81 @@ def Points_Intersection_CC(C1,C2):
         C2 (tuple): C2=(xc2,yc2,r2) : the circle whith center (xc2,yc2) and radius r2
     
     Returns:
-        Vector: P1,P2 all of solution 
+        Vector or tuple: P1,P2 all of solution 
 
     Explanation : 
         We know the equation of C : ((xc-x)²+(yc-y)²=r²) 
     """
     (xc1,yc1,r1)=C1
     (xc2,yc2,r2)=C2
-    pass
+    
+    if(xc1!=xc2):
+        a=r2**2-r1**2-(xc1-xc2)**2-(yc1-yc2)**2
+        b=-(yc1-yc2)/(xc1-xc2)
+        c=a/(2*(xc1-xc2))
+
+        A=(1+b**2)
+        B=-2*c*b
+        C=c**2
+        r=solv_polynome(A,B,B,False)
+        if(r):
+            y1_,y2_=r
+            x1_=c-y1_*b
+            x2_=c-y2_*b
+
+            x1=x1_-xc1
+            x2=x2_-xc2
+            y1=y1_-yc1
+            y2=y2_-yc2
+            
+            if(point):
+                return (Vector(x1,y1), Vector(x2,y2))
+            else:
+                return (x1,y1,x2,y2)
+
+
+    elif(yc1!=yc2):
+        a=r2**2-r1**2-(xc1-xc2)**2-(yc1-yc2)**2
+        b=-(xc1-xc2)/(yc1-yc2)
+        c=a/(2*(yc1-yc2))
+
+        A=(1+b**2)
+        B=-2*c*b
+        C=c**2
+        r=solv_polynome(A,B,B,False)
+        if(r):
+            x1_,x2_=r
+            y1_=c-x1_*b
+            y2_=c-x2_*b
+
+            x1=x1_-xc1
+            x2=x2_-xc2
+            y1=y1_-yc1
+            y2=y2_-yc2
+            
+            if(point):
+                return (Vector(x1,y1), Vector(x2,y2))
+            else:
+                return (x1,y1,x2,y2)
+        
+    elif(r1!=r2):
+        return None
+    
+    else:
+        ##infinite de solution : on en sort 2
+        x1=0
+        y1=r1
+        x2=r1
+        y2=0
+        if(point):
+            return (Vector(x1,y1), Vector(x2,y2))
+        else:
+            return (x1,y1,x2,y2)
+    
+    return None
+
+            
+
     
     
 def droite(V,P):

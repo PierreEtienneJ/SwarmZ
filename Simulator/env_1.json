@@ -3,7 +3,7 @@
         {
             "name": "R2D2",
             "position": {
-                "x": 0,
+                "x": 1,
                 "y": 0
             },
             "speed": {
@@ -18,60 +18,9 @@
             ]
         },
         {
-            "name": "drone_3",
+            "name": "R2D2",
             "position": {
-                "x": 1,
-                "y": 1
-            },
-            "speed": {
-                "vx": 0.5,
-                "vy": 0.5
-            },
-            "radius": 0.2,
-            "color": [
-                255,
-                38,
-                18
-            ]
-        },
-        {
-            "name": "drone_7",
-            "position": {
-                "x": 0,
-                "y": 1
-            },
-            "speed": {
-                "vx": 0,
-                "vy": -0.5
-            },
-            "radius": 0.2,
-            "color": [
-                255,
-                42,
-                9
-            ]
-        },
-        {
-            "name": "drone_2",
-            "position": {
-                "x": 4,
-                "y": 1
-            },
-            "speed": {
-                "vx": 0,
-                "vy": 0.5
-            },
-            "radius": 0.2,
-            "color": [
-                255,
-                21,
-                2
-            ]
-        },
-        {
-            "name": "drone_2",
-            "position": {
-                "x": 4,
+                "x": -1,
                 "y": 0
             },
             "speed": {
@@ -80,15 +29,15 @@
             },
             "radius": 0.2,
             "color": [
-                255,
-                51,
-                6
+                50,
+                50,
+                100
             ]
         },
         {
-            "name": "drone_8",
+            "name": "R2D2",
             "position": {
-                "x": 2,
+                "x": 0,
                 "y": 1
             },
             "speed": {
@@ -97,9 +46,26 @@
             },
             "radius": 0.2,
             "color": [
-                255,
-                56,
-                3
+                50,
+                50,
+                100
+            ]
+        },
+        {
+            "name": "R2D2",
+            "position": {
+                "x": 0,
+                "y": -1
+            },
+            "speed": {
+                "vx": 0.5,
+                "vy": 0
+            },
+            "radius": 0.2,
+            "color": [
+                50,
+                50,
+                100
             ]
         }
     ],

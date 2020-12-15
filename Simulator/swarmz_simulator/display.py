@@ -46,7 +46,8 @@ class Display():
 
         self.displayRadar=True
         
-        
+        self.time=0
+        self.fps=0
 
     def zoom_auto(self):
         """set new zoom
@@ -60,12 +61,14 @@ class Display():
         for obj in self.environment.objects:
             center.x+=obj.center.x
             center.y+=obj.center.y
-        center=center.x_scal(1/(self.environment.nb_objects+ self.environment.nb_drones))
 
+        if(self.environment.nb_objects+self.environment.nb_drones!=0):
+            center=center.x_scal(1/(self.environment.nb_objects+ self.environment.nb_drones))
+        
         self.center=center
         
         #recherche du points le plus loin du centre
-        radius=0
+        radius=1
         for drone in self.environment.drones:
             if(self.center.distance(drone.position)>radius):
                 radius=self.center.distance(drone.position)
@@ -81,6 +84,7 @@ class Display():
     
     def process_event(self, event:pygame.event):
         ##utilisation du zoom
+        
         if(event.type == pygame.QUIT):
             self.running=False
         
@@ -98,13 +102,16 @@ class Display():
 
             if(event.button==4): #Molette souris haut
 
-                self.zoom+=5   #on zoom
-
+                self.zoom+=2   #on zoom
+                
+                self.center=self.center.x_scal((self.zoom+2)/(self.zoom))
             if(event.button==5): #Molette souris bas
 
-                self.zoom-=5   #on dezoom
+                self.zoom-=2   #on dezoom
                 if(self.zoom<1):
                     self.zoom=1
+                    
+                self.center=self.center.x_scal(self.zoom/(self.zoom+2))
 
         if(event.type == pygame.MOUSEBUTTONUP): # si on declique
             if(event.button==1): #clique gauche
@@ -123,6 +130,7 @@ class Display():
                 self.position_souris_avant=Vector(x,y)
 
         if(event.type==pygame.KEYDOWN): #si on apuye sur une touche clavier
+
             if(event.key==pygame.K_SPACE): #espace
                 if(self.eventDisplay.pause): #si on était en pause on enlève
                     self.eventDisplay.pause=False
@@ -138,11 +146,13 @@ class Display():
                 else:
                     self.displayRadar=True
 
-            if(event.key==const.K_PLUS or event.key==const.K_KP_PLUS):
-                self.eventDisplay.coefTime*=1.8
+            if(event.key==const.K_PLUS or event.key==const.K_KP_PLUS or event.key==const.K_EQUALS):
+                self.eventDisplay.coefTime*=1.2
+                if(self.eventDisplay.coefTime>15):
+                    self.eventDisplay.coefTime=15
 
-            if(event.key==const.K_MINUS or event.key==const.K_KP_MINUS):
-                self.eventDisplay.coefTime*=1/2
+            if(event.key==const.K_MINUS or event.key==const.K_KP_MINUS or event.key==54): #54=minus key
+                self.eventDisplay.coefTime*=0.8
             
             if(event.key == const.K_ESCAPE): #on appuye sur echap => annule le polygone
                 self.new_clique_Object=[]
@@ -154,7 +164,6 @@ class Display():
         if(event.type == pygame.QUIT):
             self.stop()
             
-
     def offset(self, a): #def décalage par rapport au centre de la fenètre
         x,y=a
         x=x+self.center.x+self.size[0]/2
@@ -199,25 +208,53 @@ class Display():
             #draw all drones by circle 
     
         for drone in self.environment.drones:
-            pygame.draw.circle(self.screen, drone.color, self.offset_Point(drone.position.x_scal(self.zoom)), drone.radius*self.zoom)
-                
+
+            #pygame.draw.circle(self.screen, drone.color, self.offset_Point(drone.position.x_scal(self.zoom)), drone.radius*self.zoom)
+            
+            a=drone.radius
+            b=drone.radius
+            p=[Vector(-a/2,b/2),Vector(-a/2,-b/2),Vector(a/4,-b/2), Vector(a/1.5,0), Vector(a/4,b/2)]
+            P=[]
+            for e in p:
+                e.setCap(drone.getCap()+e.cap())
+                e=drone.position.add(e).x_scal(self.zoom)
+                P.append(self.offset_Point(e))
+            pygame.draw.polygon(self.screen, drone.color, P,5)
+
                 #draw radar
             if(self.displayRadar):
                 for i in range(drone.radar.nb_rays):
                     ray=Vector(1,0)
-                    ray.setCap(drone.radar.angles_[i]+drone.speed.cap())
+                    ray.setCap(drone.radar.angles_[i]+drone.getCap())
                     ray.setNorm(drone.radar.rays[i])
                     pygame.draw.line(self.screen, (0,200,0), self.offset_Point(drone.position.x_scal(self.zoom)), 
                                 self.offset_Point(drone.position.add(ray).x_scal(self.zoom)), 1)
                     
-                  
-                    
     
                 #drow speed vector
-            pygame.draw.line(self.screen, (143,202,90), self.offset_Point(drone.position.x_scal(self.zoom)), 
+            pygame.draw.line(self.screen, (255,0,0), self.offset_Point(drone.position.x_scal(self.zoom)), 
                                  self.offset_Point(drone.position.add(drone.speed).x_scal(self.zoom)), 2)
 
+            cap=Vector(1,0)
+            cap.setCap(drone.getCap())
+            pygame.draw.line(self.screen, (0,0,255), self.offset_Point(drone.position.x_scal(self.zoom)), 
+                                 self.offset_Point(drone.position.add(cap).x_scal(self.zoom)), 2)
+            capCo=Vector(1,0)
+            capCo.setCap(drone.capCommande)
+            pygame.draw.line(self.screen, (0,0,0), self.offset_Point(drone.position.x_scal(self.zoom)), 
+                                 self.offset_Point(drone.position.add(capCo).x_scal(self.zoom)), 2)
 
+            motor=drone.motorPower.copy()
+            motor.setCap(drone.getCap()+motor.cap()-3.1415)
+
+            motor_init=Vector(drone.positionOfRudder, 0)
+            motor_init.setCap(drone.getCap()-3.1415)
+            motor_init=motor_init.add(drone.position)
+
+            pygame.draw.line(self.screen, (255,0,0), self.offset_Point(motor_init.x_scal(self.zoom)), 
+                                 self.offset_Point(motor_init.add(motor).x_scal(self.zoom)), 2)
+            
+            
         if(self.eventDisplay.pause):
             police = pygame.font.Font(None,60)
             texte = police.render("Pause",True,pygame.Color("#FFFF00"))
@@ -231,7 +268,35 @@ class Display():
                 P.append(self.offset_Point(point.x_scal(self.zoom)))
             P.append(self.pos_souris)
             pygame.draw.lines(self.screen, (255,255,255), False, P,2)
+        
+        ##dessine le temps
+        police = pygame.font.Font(None,35)
+        minu=str(int(self.time//60))
+        sec=str(int(self.time%60))
+        if(len(minu)==1):
+            minu="0"+minu
+        if(len(sec)==1):
+            sec="0"+sec
+        texte = police.render(str(minu)+":"+str(sec),True,pygame.Color("#FFFF00"))
+        a,b=texte.get_size()
+        self.screen.blit(texte, (0, 0))
 
+        ##dessine le coef time
+        texte = police.render("x"+str(int(self.eventDisplay.coefTime*10)/10),True,pygame.Color("#FFFF00"))
+        self.screen.blit(texte, (a*1.2, 0))
+
+        #dessine zoom :
+        texte = police.render("zoom : "+str(int(self.zoom)),True,pygame.Color("#FFFF00"))
+        self.screen.blit(texte, (0, b*1.2))
+        
+        #FPS:
+        fps=str(int(self.fps*10)/10)
+        if(len(fps)<4):
+            fps="0"+fps
+        texte = police.render("FPS : "+fps,True,pygame.Color("#FFFF00"))
+        a,b=texte.get_size()
+        c,d=self.size
+        self.screen.blit(texte, (c-a, 0))
     def run(self):
         t1=t0=time.time() #save time
         T=[]
@@ -241,16 +306,20 @@ class Display():
             self.update_screen() #modifie la fenètre
             pygame.display.flip() #update
             
-            
             self.size=self.screen.get_size() #reupdate size
-            self.clock.tick(30)
+            self.clock.tick(60)
             #time.sleep(max(1/30-time.time()-t0,0))
             self.eventDisplay.dt=time.time()-t0
-            
+
+            if(not self.eventDisplay.pause):
+                self.time+=self.eventDisplay.dt*self.eventDisplay.coefTime
+
             t0=time.time()
 
+            self.eventDisplay.simulation=True
+            
             if(len(T)==100):
-              #  print('mean fps',1/statistics.mean(T))
+                self.fps=1/statistics.mean(T)
                 T=[]
             T.append(self.eventDisplay.dt)
         
@@ -266,4 +335,5 @@ class EventDisplay():
         self.stop=False #stop la simulation et la fenètre
         
         self.dt=0  #temps reel 
-        self.coefTime=1/50   #ralentissement de la simulation
+        self.coefTime=1   #ralentissement de la simulation
+        self.simulation=False

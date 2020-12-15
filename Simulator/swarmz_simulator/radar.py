@@ -14,7 +14,7 @@ class Radar:
             ranges_ (list or float): range of the radar by ray
             angles_ (list(rad)): angle of ray in rad
         """
-        ##one ray with angle egual to zero do not work, so I replace it by 0.000000..0001
+        ##one ray with angle egual to zero do not work, so I replace##on verifie si le drone ne s'éloigne pas de la ligne it by 0.000000..0001
         for i in range(len(angles_)):
             if(angles_[i]==0):
                 angles_[i]=1e-50

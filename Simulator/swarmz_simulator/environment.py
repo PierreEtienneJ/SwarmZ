@@ -3,7 +3,7 @@ L'environement correspond à l'ensemble des drones, des obstacles et des zones d
 qu'utilise le simulateur
 """
 
-
+import swarmz_simulator
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.drone import Drone
 from swarmz_simulator.object import Object
@@ -25,6 +25,18 @@ class Environment():
         """
         self.objects.append(Object(listPoint))
         self.nb_objects+=1
+    
+    def add(self, something):
+        if(isinstance(something,swarmz_simulator.drone.Drone)):
+            self.drones.append(something)
+            self.nb_drones+=1
+        elif(isinstance(something,swarmz_simulator.object.Object)):
+            self.objects.append(something)
+            self.nb_objects+=1
+        else:
+            print("Error")
+
+
 
     def nearEnv(self, position:"Vector", radius:float)->tuple:
         """return all of Object and all of drone in the circle of the center position and the radius 
@@ -103,7 +115,7 @@ class Environment():
         file=open(name,"w")
         json.dump(dic, file, indent=4)
 
-    def load(self, name:str):
+    def load(self, name:str, class_drone=Drone):
         """load a save of environment with json compatible
 
         Args:
@@ -132,7 +144,7 @@ class Environment():
                 color=(drone["color"][0],drone["color"][1],drone["color"][2])
                 name=drone["name"]
 
-                drones.append(Drone(position, vitesse, radius, name, color))
+                drones.append(class_drone(position, vitesse, radius, name, color))
             
             objs=[]
             for obj in dic['objects']:
