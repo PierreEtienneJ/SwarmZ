@@ -300,6 +300,7 @@ class Display():
     def run(self):
         t1=t0=time.time() #save time
         T=[]
+        a=0
         while(not self.eventDisplay.stop):
             for event in pygame.event.get(): #pécho les events
                 self.process_event(event) #travail event
@@ -307,18 +308,24 @@ class Display():
             pygame.display.flip() #update
             
             self.size=self.screen.get_size() #reupdate size
-            self.clock.tick(60)
+            self.clock.tick(30)
             #time.sleep(max(1/30-time.time()-t0,0))
             self.eventDisplay.dt=time.time()-t0
 
             if(not self.eventDisplay.pause):
                 self.time+=self.eventDisplay.dt*self.eventDisplay.coefTime
+                self.eventDisplay.simulation=True
+
+                if(a==2):
+                    self.eventDisplay.radar=True
+                    a=0
+                a+=1
 
             t0=time.time()
 
-            self.eventDisplay.simulation=True
             
-            if(len(T)==100):
+            
+            if(len(T)>100):
                 self.fps=1/statistics.mean(T)
                 T=[]
             T.append(self.eventDisplay.dt)
@@ -337,3 +344,4 @@ class EventDisplay():
         self.dt=0  #temps reel 
         self.coefTime=1   #ralentissement de la simulation
         self.simulation=False
+        self.radar=False

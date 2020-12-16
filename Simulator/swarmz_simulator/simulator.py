@@ -13,7 +13,7 @@ from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
 import swarmz_simulator.collision as collision
 
-class Simulator(threading.Thread):
+class PhysicalSimulator(threading.Thread):
     def __init__(self, environment:"Environment", eventDisplay:"display.EventDisplay", **kwargs):
         """Simulator need one environment, he check colision between drone and drone and drones
         between drone and object"""
@@ -22,7 +22,7 @@ class Simulator(threading.Thread):
         self.environment=environment
         self.eventDisplay=eventDisplay
 
-        self.T=[]
+        self.T=0
     def update(self, dt)->list:
         """Here, we update next position for all drones with dt and check all collisions 
         dt was time betwenn now and previous position"""
@@ -48,8 +48,7 @@ class Simulator(threading.Thread):
                     self.environment.drones[i].setGoal()
 
             ##on fixe l'environement autour du drone        
-            self.environment.drones[i].setEnvironment(self.environment.nearEnv(self.environment.drones[i].position, max(self.environment.drones[i].radar.ranges_)))
-            
+                       
       #  lead=random.randint(0,self.environment.nb_drones-1)
         for i in range(self.environment.nb_drones):
             if(i in collision_D_D or i in collision_D_Obj):
@@ -202,20 +201,48 @@ class Simulator(threading.Thread):
 
     def run(self):
         t1=t0=time.time() #save time
-
+        a=0
         while(not self.eventDisplay.stop):
             if(not self.eventDisplay.pause):
                 if(self.eventDisplay.simulation):
-                    self.eventDisplay.simulation=False
-                    self.update(self.eventDisplay.dt*self.eventDisplay.coefTime)
-
-                self.T.append(time.time()-t1)
+                    dt=time.time()-t1
+                    self.update(dt*self.eventDisplay.coefTime)
+                    self.T+=dt*self.eventDisplay.coefTime
+                    a+=1
+                if(a>100):
+                    print("time simu: ", self.T)
+                    a=0
             t1=time.time()
-            if(len(self.T)>1000):
-               # print("mean time update simu : ", 1/statistics.mean(self.T))
-                self.T=[]
+
         self.stop()
 
     def stop(self):
         self.eventDisplay.stop=True
 
+
+class RadarSimulator(threading.Thread):
+    def __init__(self, environment, eventDisplay, **kwargs):
+        threading.Thread.__init__(self)
+        
+        self.environment=environment
+        self.eventDisplay=eventDisplay
+        self.T=0
+    def update(self, **kwargs):
+        for i in range(self.environment.nb_drones):
+            self.environment.drones[i].setEnvironment(self.environment.nearEnv(self.environment.drones[i].position, max(self.environment.drones[i].radar.ranges_)))
+            ###in setEnvironment they are self.__updateRadar
+            
+    def run(self):
+        t1=t0=time.time() #save time
+        a=0
+        while(not self.eventDisplay.stop):
+            if(not self.eventDisplay.pause):
+                if(self.eventDisplay.radar):
+                    dt=time.time()-t1
+                    self.update(dt=dt*self.eventDisplay.coefTime)
+                    self.T+=dt*self.eventDisplay.coefTime
+                    a+=1
+                if(a>100):
+                    print("time radar: ", self.T)
+                    a=0
+            t1=time.time()

@@ -36,8 +36,6 @@ class Environment():
         else:
             print("Error")
 
-
-
     def nearEnv(self, position:"Vector", radius:float)->tuple:
         """return all of Object and all of drone in the circle of the center position and the radius 
         Args:

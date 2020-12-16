@@ -7,7 +7,7 @@ import random
 
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.drone import Drone
-from swarmz_simulator.simulator import Simulator
+from swarmz_simulator.simulator import PhysicalSimulator,RadarSimulator
 from swarmz_simulator.display import Display, EventDisplay
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
@@ -120,13 +120,18 @@ if __name__ == '__main__':
         
     eventFenetre=EventDisplay()
 
-    simu=Simulator(env, eventFenetre)
+    physicalSimu=PhysicalSimulator(env, eventFenetre)
+    radarSim=RadarSimulator(env, eventFenetre)
 
     fenetre = Display(env, eventFenetre)
     
-    simu.start()
+    physicalSimu.start()
+    radarSim.start()
+
     fenetre.run()
-    simu.join()
+    
+    physicalSimu.join()
+    radarSim.join()
     pygame.quit()
     
 
