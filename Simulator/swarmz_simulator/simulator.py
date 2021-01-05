@@ -23,11 +23,83 @@ class PhysicalSimulator(threading.Thread):
         self.eventDisplay=eventDisplay
 
         self.T=0
-    def update(self, dt)->list:
+
+        self.dynamic_viscosity=kwargs.get("dynamic_viscosity",1e-3) #dynamic viscosity of water
+        self.gravity=9.80665 #constant if gravity in earth
+        
+    def physicUpdate(self, dt:float, coefTime:float)->None:
+        """
+        Update drone Speed, Position and acceleration with a simulation of physic
+        Arg : 
+            dt:float, step time
+        """
+        for drone in self.environment.drones:
+            drone.update(dt, coefTime=coefTime) #update Motor Vector
+            
+            K=0
+            if(drone.pumpJet):
+                if(-drone.maxOpeningAngle<drone.angularCommande<drone.maxOpeningAngle):
+                    drone.motorPower.setCap(drone.angularCommande)
+                elif(drone.angularCommande<0):
+                    drone.motorPower.setCap(-drone.maxOpeningAngle)
+                else:
+                    drone.motorPower.setCap(drone.maxOpeningAngle)
+
+            else:
+                if(-drone.maxOpeningAngle<drone.angularCommande<drone.maxOpeningAngle):
+                    K=drone.rudder_height*drone.rudder_width*math.sin(drone.angularCommande)
+
+                elif(drone.angularCommande<0):
+                    K=drone.rudder_height*drone.rudder_width*math.sin(-drone.maxOpeningAngle)
+                else:
+                    K=drone.rudder_height*drone.rudder_width*math.sin(drone.maxOpeningAngle)
+                K=K*1e7
+                
+
+            ##we set new referential : xb, yb referential of boat  
+
+            ##frottement fluid = -S mu * V**alpha
+            local_speed=drone.speed.copy()
+            local_speed.setCap(drone.speed.cap()-drone.angular)
+            local_speed_n=local_speed.copy()
+            local_speed_n.setNorm(1)
+            Cx=1
+            Cy=100000 #1e4
+            
+            fluidFriction_x=-1/2*drone.projected_area_x*self.dynamic_viscosity*abs(local_speed.x)**2*Cx
+            fluidFriction_y=-1/2*drone.projected_area_y*self.dynamic_viscosity*abs(local_speed.y)**2*Cy
+
+            if(local_speed.x<0):
+                fluidFriction_x=-fluidFriction_x
+            if(local_speed.y<0):
+                fluidFriction_y=-fluidFriction_y
+
+            drone.acceleration=Vector(fluidFriction_x,fluidFriction_y).add(drone.motorPower).x_scal(1/drone.mass)
+            
+            #self.angularAcceleration=(self.motorPower.y*self.positionOfRudder+K*self.positionOfRudder*self.dynamic_viscosity*self.speed.norm_2()**1)/self.moment_inertia
+            moment_motor=drone.motorPower.y*drone.positionOfRudder*100
+            moment_derive=-10*drone.positionOfRudder*fluidFriction_y
+            drone.angularAcceleration=(moment_motor+moment_derive)/drone.moment_inertia
+
+            drone.acceleration.setCap(drone.acceleration.cap()+drone.angular)
+
+            drone.next_speed=drone.speed.add(drone.acceleration.x_scal(dt))
+            
+            if(drone.next_speed.norm_2()>drone.maxSpeed):
+                drone.next_speed.setNorm(drone.maxSpeed)
+
+            drone.angularSpeed=drone.angularAcceleration*dt
+            drone.angular+=1/2*drone.angularAcceleration*dt
+            
+
+            drone.next_position.x=drone.position.x+1/2*drone.speed.x*dt*coefTime#+self.speed.x_scal(dt).x
+            drone.next_position.y=drone.position.y+1/2*drone.speed.y*dt*coefTime
+        
+    def update(self, dt, coefTime)->list:
         """Here, we update next position for all drones with dt and check all collisions 
         dt was time betwenn now and previous position"""
-        for i in range(self.environment.nb_drones):
-            self.environment.drones[i].update(dt)
+        
+        self.physicUpdate(dt, coefTime)
         
         collision_D_D=[]
         collision_D_Obj=[]
@@ -79,6 +151,8 @@ class PhysicalSimulator(threading.Thread):
         """We look to see if there is a collision between the circle of radius r and center P with the segment A,B"""
         n=abs((B.x-A.x)*(P.y-A.y)-(B.y-A.y)*(P.x-A.x))
         d=math.sqrt((B.x-A.x)**2+(B.y-A.y)**2) #norme de AB
+        if(d==0):
+            return False
         if(n/d>r):
             return False
 
@@ -201,17 +275,14 @@ class PhysicalSimulator(threading.Thread):
 
     def run(self):
         t1=t0=time.time() #save time
-        a=0
         while(not self.eventDisplay.stop):
             if(not self.eventDisplay.pause):
                 if(self.eventDisplay.simulation):
+                    self.eventDisplay.simulation=False
                     dt=time.time()-t1
-                    self.update(dt*self.eventDisplay.coefTime)
-                    self.T+=dt*self.eventDisplay.coefTime
-                    a+=1
-                if(a>100):
-                    print("time simu: ", self.T)
-                    a=0
+                    self.update(self.eventDisplay.dt, self.eventDisplay.coefTime)
+                    self.T+=self.eventDisplay.dt*self.eventDisplay.coefTime
+
             t1=time.time()
 
         self.stop()
@@ -234,15 +305,11 @@ class RadarSimulator(threading.Thread):
             
     def run(self):
         t1=t0=time.time() #save time
-        a=0
         while(not self.eventDisplay.stop):
             if(not self.eventDisplay.pause):
                 if(self.eventDisplay.radar):
+                    self.eventDisplay.radar=False
                     dt=time.time()-t1
-                    self.update(dt=dt*self.eventDisplay.coefTime)
-                    self.T+=dt*self.eventDisplay.coefTime
-                    a+=1
-                if(a>100):
-                    print("time radar: ", self.T)
-                    a=0
+                    self.update(dt=self.eventDisplay.dt, coefTime=self.eventDisplay.coefTime)
+                    self.T+=self.eventDisplay.dt*self.eventDisplay.coefTime
             t1=time.time()

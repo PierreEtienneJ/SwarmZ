@@ -25,11 +25,9 @@ Here are the keys you need :
 * **a** to draw or not ray's radar
 
 ## Version :
-* alpha 0.2
-	* remains to be done:
-		* fix some bugs including the first radar beam that crosses obstacles
-		* explain some parts of simulator.py and display.py
-		* facilitate the implementation of the first algorithms 
+* alpha 0.2.1 : integration of approximate physics, progress to integrate easily, resolution of some bugs
+* alpha 0.2 : integration of lidar
+
 ## Authors :
 * Pierre-Etienne Josse
 
@@ -61,11 +59,8 @@ Voici les touches dont vous avez besoin :
 * **a** pour afficher ou non les rayons des radars
 
 ## Version :
-* alpha 0.2
-	* reste à faire :
-		* fixer quelques bugs notamment le premier rayon du radar qui traverse les obstacles
-		* expliquer certaines parties de simulator.py et de display.py
-		* faciliter l'implémentation des premiers algorithmes 
+* alpha 0.2.1 : integration d'une physique approximative, avancement dans la facilitation de la customisation, résolutions de bugs
+* alpha 0.2 : integration du lidar/radar
 
 ## Auteurs :
 * Pierre-Etienne Josse

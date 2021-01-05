@@ -17,7 +17,10 @@ class Environment():
         self.goal=goal
         self.nb_drones=len(list_Drones)
         self.nb_objects=len(list_Objects) 
-
+        
+        self.__names=[]
+        self.renameDrone()
+        
     def addObject(self, listPoint:list)->None:
         """creat and add one Object by list of Vector
         Args:
@@ -30,6 +33,7 @@ class Environment():
         if(isinstance(something,swarmz_simulator.drone.Drone)):
             self.drones.append(something)
             self.nb_drones+=1
+            self.renameDrone()
         elif(isinstance(something,swarmz_simulator.object.Object)):
             self.objects.append(something)
             self.nb_objects+=1
@@ -88,7 +92,8 @@ class Environment():
                             "position": {"x": drone.position.x, "y":drone.position.y},
                             "speed": {"vx": drone.speed.x, "vy":drone.speed.y},
                             "radius": drone.radius,
-                            "color": drone.color})
+                            "color": drone.color, 
+                            "cap":drone.getCap()})
         objs=[]
         i=0
         for obj in self.objects:
@@ -141,8 +146,9 @@ class Environment():
                 radius=drone["radius"]
                 color=(drone["color"][0],drone["color"][1],drone["color"][2])
                 name=drone["name"]
+                cap=drone['cap']
 
-                drones.append(class_drone(position, vitesse, radius, name, color))
+                drones.append(class_drone(position, vitesse, radius, name, color, ini_cap=cap))
             
             objs=[]
             for obj in dic['objects']:
@@ -165,7 +171,57 @@ class Environment():
             self.drones=drones
             self.nb_drones=len(drones)
             self.nb_objects=len(objs) 
+            self.renameDrone()
         except:
             print("invalid file type!")
             return None
 
+    def SwarmCaracteristics(self):
+        if(self.nb_drones==0):
+            return (Vector(0,0), 0, 0,0)
+        
+        center=Vector(0,0)
+        for drone in self.drones:
+            center=center.add(drone.position)
+
+        center=center.x_scal(1/self.nb_drones)
+        
+        radius=0
+        finisher=0
+        for drone in self.drones:
+            distance=center.distance(drone.position)
+            if(drone.arrive):
+                finisher+=1
+            if(distance>radius):
+                radius=distance
+        
+        density=math.pi*radius**2/self.nb_drones
+        fiisher=finisher/self.nb_drones
+        
+        return (center, radius, density, finisher)
+    
+    def fitnessSwarm(self):
+        if(self.nb_drones==0):
+            return 0
+        return 0
+
+    def regName(self, string):
+        j=len(string)-1
+        while j>0:
+            if(string[j]=='_'):
+                break
+            j-=1
+        if(j==0):
+            return string
+        return string[:j]
+        
+    def renameDrone(self):
+        self.__names=[self.regName(drone.name) for drone in self.drones]
+        for i,drone in enumerate(self.drones):
+            j=0
+            name=self.__names[i]
+            while(self.__names.count(name)>1):
+                name=self.__names[i]+"_"+str(j)
+                j+=1
+            self.__names[i]=name
+            drone.name=name

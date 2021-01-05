@@ -17,8 +17,8 @@ class Drone:
         ##robot state
         self.position=position
         self.speed=speed
-        self.next_position=position
-        self.next_speed=speed
+        self.next_position=position.copy()
+        self.next_speed=speed.copy()
 
         self.motorPower=Vector(0,0)
         self.acceleration=Vector(0,0)
@@ -31,7 +31,7 @@ class Drone:
         ##before quaternion implementation :/ 
         self.angularAcceleration=0
         self.angularSpeed=0
-        self.angular=self.speed.cap()
+        self.angular=kwargs.get('ini_cap',self.speed.cap())
         
         self.arrive=False
         self.Dt=0
@@ -47,18 +47,16 @@ class Drone:
 
         self.maxAcceleration=kwargs.get("maxAcceleration",0.1)
         self.maxAngularAcceleration=kwargs.get("maxAngularAcceleration",0.1)
-        self.maxSpeed=kwargs.get("maxSpeed",1)
+        self.maxSpeed=kwargs.get("maxSpeed",2)
         self.maxAngularSpeed=kwargs.get("maxAngularSpeed",1)
         self.maxOpeningAngle=kwargs.get("maxOpeningAngle",30*math.pi/180) #rudder or pump jet opening angle
         
         self.mass=kwargs.get("mass",10) #kg
         self.moment_inertia=kwargs.get("Moment_inertia",10) #kg.m^2
         
-        self.dynamic_viscosity=kwargs.get("dynamic_viscosity",1e-3) #dynamic viscosity of water
-
-        self.projected_area=kwargs.get("projected_area",6*math.pi*self.radius) #area of a sphere
-
-        self.gravity=9.80665 #constant if gravity in earth
+        self.projected_area_x=kwargs.get("projected_area_x",6*math.pi*self.radius) #area of a sphere
+        self.projected_area_y=kwargs.get("projected_area_y",10*self.projected_area_x) #10 x
+        
 
         self.pumpJet=kwargs.get("pumpJet",True)
 
@@ -72,10 +70,10 @@ class Drone:
         #afin de mesurer le score
         self.nb_collisions=0
         self.T=0 #temps de trajet 
-        self.__initPosition=self.position
-        self.__mean_speed=0
+        self.__initPosition=self.position.copy()
+        self.mean_speed=0
         self.__nb_actualization=0
-
+        self.time=0
         #autre
         if name=="":
             self.name="drone_"+str(random.randint(0,10))
@@ -87,17 +85,21 @@ class Drone:
         else:
             self.color=color
 
+        ####history 
+        self.history={"speed" : [], "cap": [], "position" : [], "time": [], "fitness":[]}
+        self.dt=0
+        
     def set_next(self):
         """if this drone was not colisioned, they can move at the next position
         """
         self.position=self.next_position.copy()
         self.speed=self.next_speed.copy()
         
-        self.__mean_speed=(self.__mean_speed*self.__nb_actualization+self.speed.norm_2())/(self.__nb_actualization+1)
+        self.mean_speed=(self.mean_speed*self.__nb_actualization+self.speed.norm_2())/(self.__nb_actualization+1)
         
         self.__nb_actualization+=1
 
-    def update(self, dt)->None:
+    def update(self, dt, coefTime)->None:
         """calcul the next position with they speed and time
 
         Args:
@@ -112,100 +114,22 @@ class Drone:
             self.motorPower=Vector(self.commandePower,0)
         else:
             self.motorPower=Vector(self.maxPowerMotor,0)
+
+        self.IA(dt=dt, coefTime=coefTime)
         
-        K=0
-        if(self.pumpJet):
-            if(-self.maxOpeningAngle<self.angularCommande<self.maxOpeningAngle):
-                self.motorPower.setCap(self.angularCommande)
-            elif(self.angularCommande<0):
-                self.motorPower.setCap(-self.maxOpeningAngle)
-            else:
-                self.motorPower.setCap(self.maxOpeningAngle)
-
-        else:
-            if(-self.maxOpeningAngle<self.angularCommande<self.maxOpeningAngle):
-                K=self.rudder_height*self.rudder_width*math.sin(self.angularCommande)
-
-            elif(self.angularCommande<0):
-                K=self.rudder_height*self.rudder_width*math.sin(-self.maxOpeningAngle)
-            else:
-                K=self.rudder_height*self.rudder_width*math.sin(self.maxOpeningAngle)
-            K=K*1e7
+        if(not self.arrive):
+            self.T+=dt*coefTime
+        self.dt+=dt*coefTime
+        self.time+=dt*coefTime
+        
+        if(self.dt>1):
+            self.dt=0
+            self.history["speed"].append(self.speed.norm_2())
+            self.history["cap"].append(self.getCap())
+            self.history["position"].append(self.position.copy())
+            self.history["time"].append(self.time)
+            self.history["fitness"].append(self.fitness())
             
-
-        ####________________________
-        ###             PFD 
-        ####________________________
-        if(self.speed.norm_2()<1):
-            alpha=1
-        elif(self.speed.norm_2()<2):
-            alpha=1.4 #wikipedia
-        else:
-            alpha=2
-
-        ##we set new referential : xb, yb referential of boat  
-
-        ##frottement fluid = -S mu * V**alpha
-        local_speed=self.speed.copy()
-        local_speed.setCap(self.speed.cap()-self.angular)
-        local_speed_n=local_speed.copy()
-        local_speed_n.setNorm(1)
-
-        fluidFriction_x=-self.projected_area*self.dynamic_viscosity*abs(local_speed.x)**alpha
-        fluidFriction_y=-1e4*self.projected_area*self.dynamic_viscosity*abs(local_speed.y)**(alpha)
-
-        if(local_speed.x<0):
-            fluidFriction_x=-fluidFriction_x
-        if(local_speed.y<0):
-            fluidFriction_y=-fluidFriction_y
-
-        self.acceleration=Vector(fluidFriction_x,fluidFriction_y).add(self.motorPower).x_scal(1/self.mass)
-        
-        #self.angularAcceleration=(self.motorPower.y*self.positionOfRudder+K*self.positionOfRudder*self.dynamic_viscosity*self.speed.norm_2()**1)/self.moment_inertia
-        moment_motor=self.motorPower.y*self.positionOfRudder
-        moment_derive=-self.positionOfRudder*fluidFriction_y
-        self.angularAcceleration=(moment_motor+moment_derive)/self.moment_inertia
-
-        #print("speed :", self.speed.x,self.speed.y,self.speed.cap()*180/math.pi)
-        #print("local speed :", local_speed.x,local_speed.y, local_speed.cap()*180/math.pi)
-        #print("motor : ", self.motorPower.x,self.motorPower.y)
-        #print("friction: ",fluidFriction_x,fluidFriction_y)
-        
-        #print("acc local: ", self.acceleration.x,self.acceleration.y)
-        
-        a=self.angular
-        #print("K:", K)
-        """
-        if(self.acceleration.norm_2()>self.maxAcceleration):
-            self.acceleration.setNorm(self.maxAcceleration)
-        if(self.angularAcceleration>self.maxAngularAcceleration):
-            self."""
-        
-        self.acceleration.setCap(self.acceleration.cap()+self.angular)
-
-        self.next_speed=self.speed.add(self.acceleration.x_scal(dt))
-        
-        if(self.next_speed.norm_2()>self.maxSpeed):
-            self.next_speed.setNorm(self.maxSpeed)
-
-        self.angularSpeed=self.angularAcceleration*dt
-        self.angular+=1/2*self.angularAcceleration*dt
-        
-
-        #print("agular, angular acc",self.angular*180/math.pi,self.angularAcceleration)
-        #print("dalpha: ,", a-self.angular)
-        #print("agular speed", self.angularSpeed)
-
-        self.next_position.x=self.position.x+self.acceleration.x_scal(dt**2/2).x #+self.speed.x_scal(dt).x
-        self.next_position.y=self.position.y+self.acceleration.x_scal(dt**2/2).y
-
-        self.IA(dt=dt)
-
-        
-        #print("New")
-        #print("vitesse",self.speed.x,self.speed.y, "new", self.next_speed.x,self.next_speed.y)
-        #print("acceleration", self.acceleration.x, self.acceleration.y)
-
     def setNextSpeed(self, new_speed:Vector)->None:
         """Set new_speed to the Drone
 
@@ -231,7 +155,7 @@ class Drone:
         """
         self.nb_collisions+=1
 
-        self.__mean_speed=(self.__mean_speed*self.__nb_actualization)/(self.__nb_actualization+1)
+        self.mean_speed=(self.mean_speed*self.__nb_actualization)/(self.__nb_actualization+1)
         self.__nb_actualization+=1
 
 
@@ -280,26 +204,35 @@ class Drone:
         #######################################
         ###importance de la distance du parcours: 
         #si un goal à été défini 
-        if(self.goal!=None): #la fct est décroissante de la distance de parcours
-            A=-0.5
-            B=+self.__initPosition.distance(self.goal)
+        distanceParcouru=self.mean_speed*self.T
+        if(self.goal!=None): 
+            #la fct est décroissante de la distance de parcouru
+            A=-1
+            B=3
+            #note+=A*distanceParcouru/self.__initPosition.distance(self.goal)+B
+            if(self.position.distance(self.__initPosition)!=0):
+                note+=A*distanceParcouru/self.position.distance(self.__initPosition)+B
+            #la fct est décroissante de la distance restante
+            if(not self.arrive):
+                C=-1
+                D=3
+                note+=C*self.position.distance(self.goal)/self.__initPosition.distance(self.goal)+D
+            else:
+                E=-0.5
+                F=60*4
+                note+=(E*self.T+F)
         else: #la fct est croissante de la distance effectué
             A=0.2
             B=0
-
-        #importance de l'essaim 
-        C=-0.05
-
-        if(not self.arrive):
-            note-=1000 #le drone est jamais arrivé
-        else:
-            note+=A*self.__mean_speed*self.T+B
-
+            note+=A*distanceParcouru+B
+            
+        note-=self.nb_collisions
+        
         return note
 
     def IA(self,**kwargs):
-        dt=kwargs.get('dt', None)
-
+        dt=kwargs.get('dt', 1e-50)
+        coefTime=kwargs.get('coefTime', 1)
         if(self.arrive):
             self.next_speed.setCap(self.speed.cap()+math.pi/12*dt)
             self.color=(255,random.randint(0,255), random.randint(0,255))
@@ -314,8 +247,6 @@ class Drone:
 
             self.Dt+=dt
 
-        if(not self.arrive):
-            self.T+=dt
 
     def getCap(self):
         return self.angular

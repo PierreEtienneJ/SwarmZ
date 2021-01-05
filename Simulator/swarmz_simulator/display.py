@@ -5,6 +5,8 @@ import time
 import threading
 import statistics
 
+from pygame.draw import rect
+
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
@@ -13,9 +15,7 @@ from swarmz_simulator.environment import Environment
 class Display():
     """this class use pygame to display the simulation"""
     def __init__(self,environment:Environment, eventDisplay):
-        threading.Thread.__init__(self)
         """need one Surface and one simulation"""
-        
         pygame.init()    
         self.screen=pygame.display.set_mode((1080,720), pygame.RESIZABLE) #taille modifiable
         self.environment=environment
@@ -41,13 +41,15 @@ class Display():
 
         self.maintien_clique_droit=False
         self.new_clique_Object=[]
+        self.ind_curentDrone=None
         
         self.pos_souris=[]
 
-        self.displayRadar=True
+        self.displayRadar=False
         
         self.time=0
         self.fps=0
+        self.stdFps=0
 
     def zoom_auto(self):
         """set new zoom
@@ -77,11 +79,19 @@ class Display():
             if(self.center.distance(obj.center)>radius):
                 radius=self.center.distance(obj.center)
         
-        self.radius=radius*1.5
+        self.radius=radius*1.2
 
         #def du zoom
         self.zoom=min(self.size)/2*1/self.radius 
     
+    def __cliqueDrone(self, x,y):
+        p=self.inv_offsetPoint((x,y))
+        p=p.x_scal(1/self.zoom)
+        for i,drone in enumerate(self.environment.drones):
+            if(p.distance(drone.position)<drone.radius):
+                return i
+        return None
+            
     def process_event(self, event:pygame.event):
         ##utilisation du zoom
         
@@ -90,9 +100,15 @@ class Display():
         
         if(event.type == pygame.MOUSEBUTTONDOWN): #si on clique avec la souris
             if(event.button==1): #clique gauche
-                self.maintien_clique_gauche=True
                 x, y = event.pos #position de la souris
-                self.position_souris_avant=Vector(x,y) #sauvegarde
+                ret=self.__cliqueDrone(x,y)
+                if(ret!=None):
+                    self.ind_curentDrone=ret
+                else:
+                    self.ind_curentDrone=None
+                    self.maintien_clique_gauche=True
+                    
+                    self.position_souris_avant=Vector(x,y) #sauvegarde
 
             if(event.button==3): #clique droit
                 self.maintien_clique_droit=True
@@ -106,7 +122,6 @@ class Display():
                 
                 self.center=self.center.x_scal((self.zoom+2)/(self.zoom))
             if(event.button==5): #Molette souris bas
-
                 self.zoom-=2   #on dezoom
                 if(self.zoom<1):
                     self.zoom=1
@@ -130,7 +145,6 @@ class Display():
                 self.position_souris_avant=Vector(x,y)
 
         if(event.type==pygame.KEYDOWN): #si on apuye sur une touche clavier
-
             if(event.key==pygame.K_SPACE): #espace
                 if(self.eventDisplay.pause): #si on était en pause on enlève
                     self.eventDisplay.pause=False
@@ -139,7 +153,13 @@ class Display():
             
             if(event.key==const.K_q):
                 self.stop()
-
+            if(event.key==const.K_p):
+                self.zoom+=2   #on zoom
+            if(event.key==const.K_m):
+                self.zoom-=2   #on dezoom
+                if(self.zoom<1):
+                    self.zoom=1
+                
             if(event.key==const.K_a):
                 if(self.displayRadar):
                     self.displayRadar=False
@@ -183,9 +203,9 @@ class Display():
     def offset_Point(self, p): #espèce de sur-définition
         return self.offset((p.x, p.y))
 
-    def update_screen(self):
+    def update_screen(self, **kwargs):
         pygame.draw.rect(self.screen, self.background, (0,0)+self.size) #recrée un fond
-    
+        
            #dessine l'absice et l'ordonnée
         pygame.draw.line(self.screen, (255,0,0),self.offset((0,-1e4)), self.offset((0, 1e4)))
         pygame.draw.line(self.screen, (255,0,0),self.offset((-1e4,0)), self.offset((1e4, 0)))
@@ -207,10 +227,9 @@ class Display():
             
             #draw all drones by circle 
     
-        for drone in self.environment.drones:
-
-            #pygame.draw.circle(self.screen, drone.color, self.offset_Point(drone.position.x_scal(self.zoom)), drone.radius*self.zoom)
+        for i,drone in enumerate(self.environment.drones):
             
+            #    pygame.draw.circle(self.screen, (255,0,255), self.offset_Point(drone.position.x_scal(self.zoom)), drone.radius*self.zoom)
             a=drone.radius
             b=drone.radius
             p=[Vector(-a/2,b/2),Vector(-a/2,-b/2),Vector(a/4,-b/2), Vector(a/1.5,0), Vector(a/4,b/2)]
@@ -219,16 +238,20 @@ class Display():
                 e.setCap(drone.getCap()+e.cap())
                 e=drone.position.add(e).x_scal(self.zoom)
                 P.append(self.offset_Point(e))
-            pygame.draw.polygon(self.screen, drone.color, P,5)
+            if(i==self.ind_curentDrone):
+                pygame.draw.polygon(self.screen, (200,100,100), P,5)
+            else:
+                pygame.draw.polygon(self.screen, drone.color, P,5)
 
                 #draw radar
-            if(self.displayRadar):
-                for i in range(drone.radar.nb_rays):
+            if(self.displayRadar or self.ind_curentDrone==i):
+                for j in range(drone.radar.nb_rays):
                     ray=Vector(1,0)
-                    ray.setCap(drone.radar.angles_[i]+drone.getCap())
-                    ray.setNorm(drone.radar.rays[i])
+                    ray.setCap(drone.radar.angles_[j]+drone.getCap())
+                    ray.setNorm(drone.radar.rays[j])
                     pygame.draw.line(self.screen, (0,200,0), self.offset_Point(drone.position.x_scal(self.zoom)), 
-                                self.offset_Point(drone.position.add(ray).x_scal(self.zoom)), 1)
+                                    self.offset_Point(drone.position.add(ray).x_scal(self.zoom)), 1)
+                
                     
     
                 #drow speed vector
@@ -245,6 +268,7 @@ class Display():
                                  self.offset_Point(drone.position.add(capCo).x_scal(self.zoom)), 2)
 
             motor=drone.motorPower.copy()
+            motor.setNorm(drone.motorPower.norm_2()/5)
             motor.setCap(drone.getCap()+motor.cap()-3.1415)
 
             motor_init=Vector(drone.positionOfRudder, 0)
@@ -293,42 +317,121 @@ class Display():
         fps=str(int(self.fps*10)/10)
         if(len(fps)<4):
             fps="0"+fps
-        texte = police.render("FPS : "+fps,True,pygame.Color("#FFFF00"))
+        
+        stdfps=str(int(self.stdFps*10)/10)
+        if(len(fps)<4):
+            stdfps="0"+stdfps
+        texte = police.render("FPS : "+fps+"+-"+stdfps,True,pygame.Color("#FFFF00"))
         a,b=texte.get_size()
         c,d=self.size
         self.screen.blit(texte, (c-a, 0))
+        
+        
+        ########################
+        ##history 
+        #####################
+        if(self.ind_curentDrone!=None):
+            (a,b)=self.size
+            c,d=a*0.7, b*0.8
+            pygame.draw.polygon(self.screen, (200, 200,200), [(a,b), (a, d), (c, d), (c, b)],0)
+            
+            police = pygame.font.Font(None,20)
+            texte = police.render(self.environment.drones[self.ind_curentDrone].name,True,(25, 25, 25))
+            e,f=texte.get_size()
+            self.screen.blit(texte, (c,d))
+            texte = police.render("speed : "+str(int(self.environment.drones[self.ind_curentDrone].speed.norm_2()*100)/100),True,(0, 255, 25))
+            self.screen.blit(texte, (c+e*1.2,d))
+            
+            time_ms=str(int((self.environment.drones[self.ind_curentDrone].time%60*100)))
+            time_s=str(int((self.environment.drones[self.ind_curentDrone].time%60)))
+            time_ms=time_ms[len(time_s):]
+            time=str(int(self.environment.drones[self.ind_curentDrone].time//60))
+            if(len(time)<2):
+                time="0"+time
+            if(len(time_s)<2):
+                time_s="0"+time_s
+            if(len(time_ms)<2):
+                time_ms="0"+time_ms
+            
+            texte = police.render("time : "+time+":"+time_s+"''"+time_ms,True,(50, 50, 50))
+            g,h=texte.get_size()
+            self.screen.blit(texte, (a-g,d))
+            
+            #fit
+            fit=self.environment.drones[self.ind_curentDrone].fitness()
+            fit=str(int(fit*1000)/1000)
+           
+            texte = police.render("fit : "+fit,True,(255, 0, 0))
+            k,l=texte.get_size()
+            self.screen.blit(texte, (a-g,d+h))
+            
+            P=[]
+            for position in self.environment.drones[self.ind_curentDrone].history["position"]:
+                P.append(self.offset_Point(position.x_scal(self.zoom)))
+            if(len(P)>2):
+                pygame.draw.lines(self.screen, (25,255,25), False, P,1)
+            
+            histo_speed=self.environment.drones[self.ind_curentDrone].history["speed"]
+            histo_fit=self.environment.drones[self.ind_curentDrone].history["fitness"]
+            histo_cap=self.environment.drones[self.ind_curentDrone].history["cap"]
+            if(len(histo_speed)>60):
+                histo_speed=histo_speed[-60:]
+                histo_fit=histo_fit[-60:]
+                histo_cap=histo_cap[-60:]
+            if(len(histo_speed)>2):
+                max_speed=max([abs(speed) for speed in histo_speed])
+                max_fit=max([abs(fit) for fit in histo_fit])
+            else:
+                max_speed=1
+                max_fit=1
+            P=[]
+            Q=[]
+            R=[]
+            for i,speed in enumerate(histo_speed):
+                P.append((c+i*(a-c)/60, b-(b-d+f)/2-speed/max_speed*(b-d)/3))
+                Q.append((c+i*(a-c)/60, b-(b-d+f)/2-histo_fit[i]/max_fit*(b-d)/3))
+                R.append((c+i*(a-c)/60, b-(b-d+f)/2-histo_cap[i]/(3.141592)*(b-d)/3))
+                
+            pygame.draw.lines(self.screen, (200,100,205), False, [(c, b-(b-d+f)/2), (a, b-(b-d+f)/2)],1)
+            
+            if(2<len(P)<60):
+                pygame.draw.lines(self.screen, (0,255,25), False, P,1)
+                pygame.draw.lines(self.screen, (255,0,0), False, Q,1)
+                pygame.draw.lines(self.screen, (0,50,100), False, R,1)
+            elif(len(P)>=60):
+                pygame.draw.lines(self.screen, (0,255,25), False, P[-60:],1)
+                pygame.draw.lines(self.screen, (255,0,0), False, Q[-60:],1)
+                pygame.draw.lines(self.screen, (0,50,100), False, R[-60:],1)
+
+    
     def run(self):
         t1=t0=time.time() #save time
         T=[]
-        a=0
         while(not self.eventDisplay.stop):
-            for event in pygame.event.get(): #pécho les events
-                self.process_event(event) #travail event
-            self.update_screen() #modifie la fenètre
-            pygame.display.flip() #update
-            
             self.size=self.screen.get_size() #reupdate size
-            self.clock.tick(30)
+            self.clock.tick(60)
             #time.sleep(max(1/30-time.time()-t0,0))
-            self.eventDisplay.dt=time.time()-t0
+            self.eventDisplay.setDt(time.time()-t0)
 
             if(not self.eventDisplay.pause):
                 self.time+=self.eventDisplay.dt*self.eventDisplay.coefTime
                 self.eventDisplay.simulation=True
-
-                if(a==2):
-                    self.eventDisplay.radar=True
-                    a=0
-                a+=1
-
-            t0=time.time()
+                self.eventDisplay.radar=True
 
             
+            self.update_screen() #modifie la fenètre
+            pygame.display.flip() #update
+
+            t0=time.time()
             
             if(len(T)>100):
                 self.fps=1/statistics.mean(T)
+                self.stdFps=statistics.stdev([1/e for e in T])
                 T=[]
             T.append(self.eventDisplay.dt)
+            
+            for event in pygame.event.get(): #pécho les events
+                self.process_event(event) #travail event
         
     def stop(self):
         self.eventDisplay.stop=True
@@ -338,10 +441,27 @@ class Display():
 class EventDisplay():
     def __init__(self):
         #communication entre la fenetre et la simulation
-        self.pause=True ##sert a mettre en pause la simulation
+        self.pause=False ##sert a mettre en pause la simulation
         self.stop=False #stop la simulation et la fenètre
         
         self.dt=0  #temps reel 
         self.coefTime=1   #ralentissement de la simulation
         self.simulation=False
         self.radar=False
+        
+        self.lenListStepTime=100
+        self.listStepTime=[0 for i in range(self.lenListStepTime)]
+        self.i_listStepTime=0
+        
+    def setDt(self, dt:float):
+        self.listStepTime[self.i_listStepTime]=dt
+        self.i_listStepTime+=1
+        
+        if self.i_listStepTime>=self.lenListStepTime:
+            self.i_listStepTime=0
+        
+        self.dt=statistics.mean(self.listStepTime)
+
+        
+        
+        
