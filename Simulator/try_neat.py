@@ -6,7 +6,6 @@ import statistics
 import random
 import os
 import neat
-import matplotlib.pyplot as plt
 import pickle
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.drone import Drone
@@ -15,6 +14,8 @@ from swarmz_simulator.display import Display, EventDisplay
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
 from swarmz_simulator.radar import Radar, Lidar 
+
+import visualize
 
 generation=0
 
@@ -45,6 +46,8 @@ class MyDrone(Drone):
         he take cap of the goal whith a random 
         """
         dt=kwargs.get('dt', 1e-50)
+        if(dt==0):
+            dt=1e-50
         coefTime=kwargs.get('coefTime', 1)
         self.angularCommande=kwargs.get('angularCommande', 0)
         capLocalCommande=kwargs.get('capLocalCommande', self.capCommande-self.angular)
@@ -94,8 +97,8 @@ class MyDrone(Drone):
         L.append(goal.cap()/math.pi)
         L.append(goal.norm_2())
         
-        if(not forHisto):
-            L=L+self.history["inputIA"][-1]
+        """if(not forHisto):
+            L=L+self.history["inputIA"][-1]"""
             
         return L
         
@@ -143,7 +146,8 @@ class MyDisplay(Display):
                 self.fps=1/statistics.mean(T)
                 self.stdFps=statistics.stdev([1/e for e in T])
                 T=[]
-            T.append(self.eventDisplay.dt)
+            if(self.eventDisplay.dt !=0):
+                T.append(self.eventDisplay.dt)
             
             for event in pygame.event.get(): #pécho les events
                 self.process_event(event) #travail event
@@ -226,14 +230,14 @@ def fitness(genomes, config):
         ge.append(g)
         i+=1
     
-    objects=creatSomeObject(50,6,1, Vector(0,0),10, 20)+[Object([Vector(-30, -30), Vector(-30, 30), Vector(30,30), Vector(30,-30)])]
+    objects=creatSomeObject(30,6,1, Vector(0,0),10, 20)+[Object([Vector(-30, -30), Vector(-30, 30), Vector(30,30), Vector(30,-30)])]
         
     goal=Object([Vector(25,25), Vector(23,25), Vector(23,23), Vector(25,23)])
     
     env=Environment(drones, objects, goal)
     
     eventFenetre=EventDisplay()
-    eventFenetre.coefTime=4
+    eventFenetre.coefTime=2
     physicalSimu=MyPhysicalSimu(env, eventFenetre, nets, ge)
     radarSim=RadarSimulator(env, eventFenetre)
 
@@ -247,7 +251,7 @@ def fitness(genomes, config):
     physicalSimu.join()
     radarSim.join()
     
-def replay_genome(config_path, genome_path="winner.pkl", nb=20):
+def replay_genome(config_path, genome_path="winner.pkl", nb=10):
     # Load requried NEAT config
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, 
                                 neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
@@ -263,8 +267,8 @@ def replay_genome(config_path, genome_path="winner.pkl", nb=20):
     fitness(genomes, config)
 
 
-def run(config_path):
-    config=neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, 
+def run(config_path, name_winner="winner.pkl"):
+    config=neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, 
                               neat.DefaultStagnation, config_path)
     
     population=neat.Population(config)
@@ -274,16 +278,30 @@ def run(config_path):
     stats=neat.StatisticsReporter()
     
     population.add_reporter(stats)
+    population.add_reporter(neat.Checkpointer(5))
+    winner=population.run(fitness,50)
     
-    winner=population.run(fitness,40)
-    
-    with open("winner.pkl", "wb") as f:
+    with open("name_winner", "wb") as f:
         pickle.dump(winner, f)
         f.close()
+
+    angle=["0","pi/2","pi", "-pi/2", "pi/6", "-pi/6"]
+    node_names = {0:"cap"}
+    for i in range(len(angle)):
+        node_names[-(2*i+1)]="Ray_"+str(i)+"_dist"
+        node_names[-(2*i+2)]="Ray_"+str(i)+"_angle_"+angle[i]
+    i=len(angle)
+    node_names[-(2*i+1)]="cap_goal"
+    node_names[-(2*i+2)]="dist_goal"
+
+    visualize.draw_net(config, winner, True, node_names=node_names)
+    visualize.plot_stats(stats, ylog=False, view=True)
+    visualize.plot_species(stats, view=True)
+
 if __name__ == '__main__':
     local_dir=os.path.dirname(__file__)
     config_path=os.path.join(local_dir, "config_NEAT.txt")
-    run(config_path)
+    run(config_path, "winner.pkl")
     #replay_genome(config_path,genome_path="winner.pkl", nb=20)
     
 

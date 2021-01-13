@@ -64,9 +64,6 @@ class MyDrone(Drone):
                     self.setCap((2*random.random()-1)*math.pi/4 + self.getCap())
                 self.commandePower=20
             
-            if(self.T>50000):
-                self.angularCommande=0
-                self.commandePower=0
             self.Dt+=dt*coefTime
             self.T+=dt*coefTime
         

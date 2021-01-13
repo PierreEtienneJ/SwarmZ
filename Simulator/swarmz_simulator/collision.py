@@ -4,7 +4,6 @@ import cmath
 from swarmz_simulator.vector import Vector
 
 
-import matplotlib.pyplot as plt
 """The set of the following functions aims at simplifying the calculation of collisions between two robots, a robot and an object...."""
 
 def solv_polynome(a,b,c, complexe=True):

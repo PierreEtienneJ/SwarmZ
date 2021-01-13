@@ -384,6 +384,9 @@ class Display():
             else:
                 max_speed=1
                 max_fit=1
+            if max_speed==0:
+                max_speed=1
+
             P=[]
             Q=[]
             R=[]
@@ -411,7 +414,9 @@ class Display():
             self.size=self.screen.get_size() #reupdate size
             self.clock.tick(60)
             #time.sleep(max(1/30-time.time()-t0,0))
-            self.eventDisplay.setDt(time.time()-t0)
+            dt=time.time()-t0
+            t0=time.time()
+            self.eventDisplay.setDt(dt)
 
             if(not self.eventDisplay.pause):
                 self.time+=self.eventDisplay.dt*self.eventDisplay.coefTime
@@ -422,7 +427,7 @@ class Display():
             self.update_screen() #modifie la fenètre
             pygame.display.flip() #update
 
-            t0=time.time()
+            
             
             if(len(T)>100):
                 self.fps=1/statistics.mean(T)
@@ -449,8 +454,8 @@ class EventDisplay():
         self.simulation=False
         self.radar=False
         
-        self.lenListStepTime=100
-        self.listStepTime=[0 for i in range(self.lenListStepTime)]
+        self.lenListStepTime=1000
+        self.listStepTime=[1/30 for i in range(self.lenListStepTime)]
         self.i_listStepTime=0
         
     def setDt(self, dt:float):
@@ -461,6 +466,7 @@ class EventDisplay():
             self.i_listStepTime=0
         
         self.dt=statistics.mean(self.listStepTime)
+
 
         
         

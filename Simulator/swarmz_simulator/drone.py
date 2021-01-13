@@ -7,9 +7,7 @@ from swarmz_simulator.radar import Radar, Lidar
 import numpy as np
 import math
 import random
-import math
 
-import matplotlib.pyplot as plt
 
 class Drone:
     """this class corespond to a drone, can simulate there deplacement"""

@@ -105,11 +105,11 @@ class PhysicalSimulator(threading.Thread):
         collision_D_Obj=[]
         
         for i in range(self.environment.nb_drones):
-            if(i!=self.environment.nb_drones-1): #si ce n'est pas le dernier drone
-                for j in range(i+1,self.environment.nb_drones):
-                    if(self.collision_Drone_Drone(i,j)):
-                        collision_D_D.append(i)
-                        collision_D_D.append(j)
+            #if(i!=self.environment.nb_drones-1): #si ce n'est pas le dernier drone
+            #    for j in range(i+1,self.environment.nb_drones):
+            #        if(self.collision_Drone_Drone(i,j)):
+            #            collision_D_D.append(i)
+            #            collision_D_D.append(j)
 
             for j in range(self.environment.nb_objects):
                 if(self.collision_Drone_Objects(i,j)):

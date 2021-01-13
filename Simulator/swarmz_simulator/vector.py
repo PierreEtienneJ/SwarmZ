@@ -1,5 +1,4 @@
 import math
-import matplotlib.pyplot as plt
 
 class Vector:
     """This class was created for simplify all math operation with vector"""
