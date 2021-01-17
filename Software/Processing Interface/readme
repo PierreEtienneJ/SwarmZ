@@ -5,4 +5,5 @@ Le fichier Radar: affiche l'interface sous forme de radar pour détecter les obj
                   bateau sur le côté babord et tribord et n'est pas représentatif des angles détecter en référentiel "bateau".
             
 Le fichier main regroupe le fichier radar et permet de communiquer avec arduino via le SerialPort pour récupérer les valeurs des capteurs ultrasons.
+Pour faire fonctionner l'interface processing avec le code arduino, il faut récuperer le code sur la branch "code-arduino-Micka"
 
