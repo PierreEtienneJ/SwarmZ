@@ -8,5 +8,5 @@ Le fichier main: regroupe le fichier radar et permet de communiquer avec arduino
                  Pour faire fonctionner l'interface processing avec le code arduino, il faut récuperer le code sur la branch "code-arduino-Micka"
                  
 
-Voir le fichier "Inteface architecture" pour l'architecture de l'interface processing
+Voir le fichier "Inteface architecture" pour comprendre l'architecture de l'interface processing finale voulu
 
