@@ -66,7 +66,8 @@ else
   analogWrite(enable, 255);           //Vitesse max PWM
   }
 
-//Serial.println(mesuredisDroit);
-//Serial.println(mesuredisGauche);
- //Serial.println(enable);
+Serial.println(mesuredisDroit);
+Serial.print(',');
+Serial.println(mesuredisGauche);
+ Serial.println('.');
 }
