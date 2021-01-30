@@ -2,6 +2,7 @@
 from swarmz_simulator.collision import *
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.object import Object
+from swarmz_simulator.communication import Communication
 from swarmz_simulator.radar import Radar, Lidar
 
 import numpy as np
@@ -42,6 +43,8 @@ class Drone:
         #caracteristics 
         self.radius=abs(radius)
         self.radar=Lidar(10,int(360/5))
+
+        self.communication=Communication(size_bufferRX=128,size_bufferTX=128)
 
         self.maxAcceleration=kwargs.get("maxAcceleration",0.1)
         self.maxAngularAcceleration=kwargs.get("maxAngularAcceleration",0.1)

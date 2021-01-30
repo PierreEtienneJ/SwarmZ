@@ -7,7 +7,7 @@ import random
 
 from swarmz_simulator.vector import Vector
 from swarmz_simulator.drone import Drone
-from swarmz_simulator.simulator import PhysicalSimulator,RadarSimulator
+from swarmz_simulator.simulator import PhysicalSimulator,RadarSimulator, CommunicationSimulator
 from swarmz_simulator.display import Display, EventDisplay
 from swarmz_simulator.object import Object
 from swarmz_simulator.environment import Environment
@@ -63,7 +63,19 @@ class MyDrone(Drone):
                 else:
                     self.setCap((2*random.random()-1)*math.pi/4 + self.getCap())
                 self.commandePower=20
-            
+
+                L=[random.randint(0,1) for i in range(10)]
+                #print("====================================")
+                #print(self.name)
+                for e in L:
+                    self.communication.addTX(e)
+                #print("send :", L, "buffer TX=", self.communication.bufferTX.tableau)
+                T=[]
+                #print("buffer RX=", self.communication.bufferRX.tableau)
+                while self.communication.haveMsg():
+                    T.append(self.communication.getMsg())
+                #print("recive : ", T)
+
             self.Dt+=dt*coefTime
             self.T+=dt*coefTime
         
@@ -125,7 +137,7 @@ if __name__ == '__main__':
         
         positions=getInitialPosition(20, 1)
         
-        for i in range(20):
+        for i in range(2):
             env.add(MyDrone(positions[i], pumpJet=True, maxPowerMotor=1,positionOfRudder=-0.2,
                               moment_inertia=0.1,maxOpeningAngle=30*math.pi/180))
             
@@ -140,16 +152,18 @@ if __name__ == '__main__':
 
     physicalSimu=PhysicalSimulator(env, eventFenetre)
     radarSim=RadarSimulator(env, eventFenetre)
-
+    comSim=CommunicationSimulator(env, eventFenetre)
     fenetre = Display(env, eventFenetre)
     
     physicalSimu.start()
     radarSim.start()
+    comSim.start()
 
     fenetre.run()
     
     physicalSimu.join()
     radarSim.join()
+    comSim.join()
     pygame.quit()
     
 

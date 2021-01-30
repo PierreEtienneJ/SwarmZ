@@ -1,5 +1,4 @@
 
-# %%
 import math
 import threading
 import time
@@ -279,9 +278,12 @@ class PhysicalSimulator(threading.Thread):
             if(not self.eventDisplay.pause):
                 if(self.eventDisplay.simulation):
                     self.eventDisplay.simulation=False
-                    dt=time.time()-t1
+                    
                     self.update(self.eventDisplay.dt, self.eventDisplay.coefTime)
                     self.T+=self.eventDisplay.dt*self.eventDisplay.coefTime
+                    
+                    dt=time.time()-t1
+                    print("Physical simulator : ", dt)
 
             t1=time.time()
 
@@ -309,7 +311,70 @@ class RadarSimulator(threading.Thread):
             if(not self.eventDisplay.pause):
                 if(self.eventDisplay.radar):
                     self.eventDisplay.radar=False
-                    dt=time.time()-t1
                     self.update(dt=self.eventDisplay.dt, coefTime=self.eventDisplay.coefTime)
                     self.T+=self.eventDisplay.dt*self.eventDisplay.coefTime
+                    dt=time.time()-t1
+                    print("Radar simulator dt:", dt)
+            t1=time.time()
+                    
+            
+
+class CommunicationSimulator(threading.Thread):
+    def __init__(self, environment, eventDisplay, **kwargs):
+        threading.Thread.__init__(self)
+        
+        self.environment=environment
+        self.eventDisplay=eventDisplay
+        self.T=0
+        self.__message=[]
+        self.__maxLenMessage=kwargs.get("maxLenMessage",100)
+        self.__communicationFlow=kwargs.get("communicationFlow",1000)
+
+        self.readTimeFlow=0
+        self.dt=0
+        self.history={'flow':[], 'time':[]}
+
+    def update(self, **kwargs):
+        dt=kwargs.get('dt', 1e-50)*kwargs.get('coefTime', 1)
+        self.dt+=dt
+        if(self.dt>1):
+            self.dt-=1
+            self.history['flow'].append(self.readTimeFlow)
+            self.history['time'].append(self.T)
+            self.readTimeFlow=0
+
+        I=random.sample(range(0,self.environment.nb_drones),self.environment.nb_drones)
+        
+        sending=self.readTimeFlow<self.__communicationFlow
+        i0=0
+        for i in I:
+            r=self.environment.drones[i].communication.send(sending)
+            if(sending):
+                if(r is None):
+                    sending=True
+                else:
+                    sending=False
+                    self.__message=self.__message+r
+                    self.readTimeFlow+=len(r)
+                    i0=i
+
+        l=min(self.__communicationFlow-self.readTimeFlow, len(self.__message))
+
+        for i in range(self.environment.nb_drones):
+            if(i!=i0 and self.environment.drones[i0].position.distance(self.environment.drones[i].position)<self.environment.drones[i0].communication.communicationRange):
+                for j in range(l):
+                    self.environment.drones[i].communication.addRX(self.__message[j])
+
+        self.__message=self.__message[l:]
+
+    def run(self):
+        t1=t0=time.time() #save time
+        while(not self.eventDisplay.stop):
+            if(not self.eventDisplay.pause):
+                if(self.eventDisplay.communication):
+                    self.eventDisplay.communication=False
+                    self.update(dt=self.eventDisplay.dt, coefTime=self.eventDisplay.coefTime)
+                    self.T+=self.eventDisplay.dt*self.eventDisplay.coefTime
+                    dt=time.time()-t1
+                    print("Communication simulator : ", dt)
             t1=time.time()

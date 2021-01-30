@@ -414,14 +414,15 @@ class Display():
             self.size=self.screen.get_size() #reupdate size
             self.clock.tick(60)
             #time.sleep(max(1/30-time.time()-t0,0))
-            dt=time.time()-t0
-            t0=time.time()
+            dt=time.time()-t1
+            t1=time.time()
             self.eventDisplay.setDt(dt)
-
+            print("Display dt :", dt)
             if(not self.eventDisplay.pause):
                 self.time+=self.eventDisplay.dt*self.eventDisplay.coefTime
                 self.eventDisplay.simulation=True
                 self.eventDisplay.radar=True
+                self.eventDisplay.communication=True
 
             
             self.update_screen() #modifie la fenètre
@@ -453,7 +454,8 @@ class EventDisplay():
         self.coefTime=1   #ralentissement de la simulation
         self.simulation=False
         self.radar=False
-        
+        self.communication=False
+
         self.lenListStepTime=1000
         self.listStepTime=[1/30 for i in range(self.lenListStepTime)]
         self.i_listStepTime=0
