@@ -1,0 +1,2 @@
+D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\ClientDrones\Debug\ClientDrones.exe
+D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\ClientDrones\Debug\ClientDrones.pdb

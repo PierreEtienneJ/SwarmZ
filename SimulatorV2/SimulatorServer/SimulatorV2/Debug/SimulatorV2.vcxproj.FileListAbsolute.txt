@@ -1,0 +1,2 @@
+D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Debug\SimulatorV2.exe
+D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Debug\SimulatorV2.pdb
