@@ -37,8 +37,10 @@ class MyDrone(Drone):
     def __init__(self,position:Vector, **kwargs):
         super().__init__(position, Vector(0,0), 0.2,name="R2D2",color=(50,50,100), **kwargs) #initialize the drone 
         self.radar=Radar(20,[0,math.pi/2,math.pi, -math.pi/2, math.pi/6, -math.pi/6]) #create specific Radar
-        self.history["inputIA"]=[[0 for i in range(14)] for j in range(2)]
+        self.history["inputIA"]=[[0 for i in range(34)] for j in range(2)]
         self.__dt=0
+        self.IA_send=[0 for i in range(5)];
+        self.IA_recive=[0 for i in range(5*4)];
         
     def IA(self,**kwargs):
         """create one specific IA
@@ -49,13 +51,29 @@ class MyDrone(Drone):
         if(dt==0):
             dt=1e-50
         coefTime=kwargs.get('coefTime', 1)
+        
         self.angularCommande=kwargs.get('angularCommande', 0)
+        self.IA_send=kwargs.get('IA_send', self.IA_send)
+        
         capLocalCommande=kwargs.get('capLocalCommande', self.capCommande-self.angular)
         self.__dt+=dt*coefTime
         
         if(self.__dt>1):
             self.__dt=0
             self.history["inputIA"].append(self.getInputIA(True))
+        
+        for e in self.IA_send:
+            self.communication.addTX(e)
+        self.IA_send=[0 for i in range(5)];
+        
+        T=[]
+        i=0
+        while self.communication.haveMsg() and i<5*4:
+            T.append(self.communication.getMsg())
+            i+=1
+        l0=min(len(T), 5*4)
+        self.IA_recive=self.IA_recive[l0:]+T[:l0]
+
         
         P=1
         I=0
@@ -96,10 +114,8 @@ class MyDrone(Drone):
         
         L.append(goal.cap()/math.pi)
         L.append(goal.norm_2())
+        L=L+self.IA_recive
         
-        """if(not forHisto):
-            L=L+self.history["inputIA"][-1]"""
-            
         return L
         
 class MyDisplay(Display):
@@ -167,8 +183,8 @@ class MyPhysicalSimu(PhysicalSimulator):
         for i,drone in enumerate(self.environment.drones):
             output=self.nets[i].activate(drone.getInputIA())
             capLocalCommande=2*math.pi*output[0]
-
-            drone.IA(capLocalCommande=capLocalCommande)
+            IA_send=[round(output[i]) for i in range(1,6)]
+            drone.IA(capLocalCommande=capLocalCommande,IA_send=IA_send)
                 
             self.ge[i].fitness=drone.fitness()+self.environment.fitnessSwarm()
                 
@@ -265,7 +281,22 @@ def replay_genome(config_path, genome_path="winner.pkl", nb=10):
 
     # Call game with only the loaded genome
     fitness(genomes, config)
+    angle=["0","pi/2","pi", "-pi/2", "pi/6", "-pi/6"]
+    node_names = {0:"cap"}
+    for i in range(len(angle)):
+        node_names[-(2*i+1)]="Ray_"+str(i)+"_dist"
+        node_names[-(2*i+2)]="Ray_"+str(i)+"_angle_"+angle[i]
+    i=len(angle)
+    node_names[-(2*i+1)]="cap_goal"
+    node_names[-(2*i+2)]="dist_goal"
+    j=-(2*i+2)+1
+    for i in range(0,5):
+        for k in range(5):
+            node_names[-(abs(j)+5*i+k)]="message "+str(i)+" bit "+str(k)
+    for i in range(1,6):
+        node_names[i]="message send byte "+str(i-1)
 
+    visualize.draw_net(config, genomes[2][1], True,node_names=node_names)
 
 def run(config_path, name_winner="winner.pkl"):
     config=neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, 
@@ -301,7 +332,5 @@ def run(config_path, name_winner="winner.pkl"):
 if __name__ == '__main__':
     local_dir=os.path.dirname(__file__)
     config_path=os.path.join(local_dir, "config_NEAT.txt")
-    run(config_path, "winner.pkl")
-    #replay_genome(config_path,genome_path="winner.pkl", nb=20)
-    
-
+    #run(config_path, "winner.pkl")
+    replay_genome(config_path,genome_path="winner.pkl", nb=20)
