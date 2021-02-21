@@ -142,11 +142,13 @@
     <ClCompile Include="Errors.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Message.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="Sockets.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Errors.hpp" />
     <ClInclude Include="Message.hpp" />
+    <ClInclude Include="Server.hpp" />
     <ClInclude Include="Sockets.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

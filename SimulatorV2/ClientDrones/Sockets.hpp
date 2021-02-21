@@ -41,8 +41,7 @@ typedef int socklen_t;
 
 #include <string>
 
-namespace Sockets
-{
+namespace Sockets{
 	bool Start();
 	void Release();
 	int GetError();

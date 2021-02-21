@@ -1,38 +1,98 @@
 #include "Message.hpp"
 
-Message::Message(int id_message, char* TXmessage, int len) { //creation d'un message à envoyer
-	this->message = TXmessage;
-	this->id_message = id_message;
-	this->payloadLength = len;
-	this->sum = 0;
-	this->calculSum();
-}
-Message::Message(char* RXmessage) { //création d'un message recu
+unsigned char* Message::int2uChar(int i, int size) {
+    if (size == 2) {
+        unsigned char retour[2];
+        retour[0] = i % 255;
+        retour[1] = i / 255;
+        return retour;
+    }
+    else if (size == 3) {
+        unsigned char retour[3];
+        retour[0] = i % 255;
+        retour[1] = i / 255;
+        retour[2] = i / (255 * 255);
 
+        return retour;
+    }
+    else {
+        unsigned char retour[] = { 0 };
+        return retour;
+    }
 }
-int Message::getId_message(void) { //retourne l'ID du message
-	return this->id_message;
-}
-int Message::getID_emetteur(void) { //retourn l'ID de l'emetteur
-	return -1;
-}
-char* Message::sendMessage(void) { //retourne le message à envoyer
-	int len = 4 + this->payloadLength + 1 + 1;
-	
 
+int Message::uChar2int(unsigned char* c, int size) {
+    if (size == 2) {
+        return (((int)c[1]) << 8) + ((int)c[0]);
+    }
+    else if (size == 3) {
+        return (((int)c[2]) << 16) + (((int)c[1]) << 8) + ((int)c[0]);;
+    }
+    else {
+        int retour = 0;
+        return retour;
+    }
 }
-char* Message::getMessage(void) { //retourne le message
+
+FormatMsg Message::formatMessage(char* msg, int idMessage, int idEmetteur, int len) {
+    FormatMsg message;
+    for (int i = 0; i < len; i++) {
+        message.msg[i] = msg[i];
+    }
+    unsigned char* test = int2uChar(idMessage, 2);
+    message.idMsg_1 = test[0];
+    message.idMsg_2 = test[1];
+
+    message.idEmetteur_1 = int2uChar(idEmetteur, 3)[0];
+    message.idEmetteur_2 = int2uChar(idEmetteur, 3)[1];
+    message.idEmetteur_3 = int2uChar(idEmetteur, 3)[2];
+    unsigned char* test2 = int2uChar(len + 1 + 2 + 2 + 3, 2);
+    message.len_1 = test2[0];
+    message.len_2 = test2[1];
+    return message;
 }
-void Message::calculSum(void) { //calcul la sum des char
-	char sum = 0;
-	sum += (char)'0xfe';
-	sum += (char)this->payloadLength;
-	for (int i = 0; i < this->payloadLength; i++) {
-		sum += this->message[i];
-	}
-	this->sum = sum;
+
+ReadMsg Message::readMessage(FormatMsg msg) {
+    ReadMsg message;
+    unsigned char leng[] = { msg.len_1, msg.len_2 };
+    message.len = uChar2int(leng, 2) - 1 - 2 - 2 - 3;
+    for (int i = 0; i < maxSizeMsg; i++) {
+        if (i < message.len) {
+            message.msg[i] = msg.msg[i];
+        }
+        else {
+            message.msg[i] = 0;
+        }
+    }
+    unsigned char idmessage[] = { msg.idMsg_1, msg.idMsg_2 };
+    message.idMsg = uChar2int(idmessage, 2);
+    unsigned char idEmetteur[] = { msg.idEmetteur_1, msg.idEmetteur_2, msg.idEmetteur_3 };
+    message.idEmetteur = uChar2int(idEmetteur, 3);
+
+    return message;
 }
-int Message::getPayloadLength(void) { //retourne la taille du message
+
+Message::Message() {
+    char msg[] = { 0 };
+    FormatMsg message_format = formatMessage(msg, 0, 0, 1);
+    ReadMsg message = readMessage(message_format);
 }
-bool Message::goodMessage(void) { //retourne true si le message est bon, false si la sum est pas bonne
+Message::Message(ReadMsg message) {
+    message = message;
+    message_format= formatMessage(message.msg, message.idMsg, message.idEmetteur, message.len);
+}
+Message::Message(FormatMsg message) {
+    message_format = message;
+    this->message = readMessage(message_format);
+}
+Message::Message(char* msg, int idMessage, int idEmetteur, int len) {
+    message_format = formatMessage(msg, idMessage, idEmetteur, len);
+    message = readMessage(message_format);
+}
+
+FormatMsg Message::msg2Send(void) {
+    return message_format;
+}
+ReadMsg Message::msg2Read(void) {
+    return message;
 }

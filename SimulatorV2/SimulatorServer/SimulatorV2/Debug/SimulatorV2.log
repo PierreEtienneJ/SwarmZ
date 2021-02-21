@@ -1,7 +1,2 @@
-﻿  Message.cpp
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(33): error C4716: 'Message::goodMessage' : doit retourner une valeur
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(18): error C4716: 'Message::sendMessage' : doit retourner une valeur
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(16): error C4716: 'Message::getID_emetteur' : doit retourner une valeur
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(20): error C4716: 'Message::getMessage' : doit retourner une valeur
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(14): error C4716: 'Message::getId_message' : doit retourner une valeur
-D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Message.cpp(31): error C4716: 'Message::getPayloadLength' : doit retourner une valeur
+﻿  main.cpp
+  SimulatorV2.vcxproj -> D:\Seatech\3A\SwarmZ\simulatorSwarmZ\SimulatorV2\SimulatorServer\SimulatorV2\Debug\SimulatorV2.exe
